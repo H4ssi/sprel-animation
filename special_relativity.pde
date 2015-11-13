@@ -33,8 +33,7 @@ void draw() {
 
 abstract class Scene {
   boolean end;
-
-  abstract void draw(int m);
+  int m;
 
   Integer start;
   void draw() {
@@ -42,61 +41,113 @@ abstract class Scene {
       start = millis();
     }
 
-    draw(millis() - start);
+    for (Runnable r : runs) {
+      r.run();
+    }
+  }
+
+  int cur = 0;
+  ArrayList<Runnable> runs = new ArrayList<Runnable>();
+
+  void show(final int delay, final int length, final Runnable run) {
+    cur += delay;
+    final int off = cur;
+    runs.add(new Runnable() {
+      public void run() {
+        if (start + off <= millis() && (length == 0 || millis() <= start + off + length)) {
+          run.run();
+        }
+      }
+    }
+    );
   }
 }
 
 class Opening extends Scene {  
 
-  void draw(int m) {
+  Opening() {
     background(0);
 
-    text("Special Relativity", width / 2, height / 2); 
-
-    if (m > 1000) {
-      text("is hard", width / 2, height / 1.5);
+    show(0, 0, new Runnable() {
+      public void run() {
+        text("Special Relativity", width / 2, height / 2);
+      }
     }
+    );
 
-    if (m > 2000) {
-      end = true;
+    show(1000, 0, new Runnable() {
+      public void run() {
+        text("is hard", width / 2, height / 1.5);
+      }
     }
+    );
+
+    show(1000, 0, new Runnable() {
+      public void run() {
+        end = true;
+      }
+    }
+    );
   }
 }
 
 class LightIntro extends Scene {
-  void draw(int m) {
-    background(0);
+  LightIntro() {
 
-    int xLight = 100;
-    int xText = width / 2;
+    final int xLight = 100;
+    final int xText = width / 2;
 
-    fill(255, 255, 0);
-    ellipse(xLight, height * 0.5, 20, 20);
-
-
-    if (m > 500) {
-      text("This is light", xText, height * 0.2);
+    show(0, 0, new Runnable() {
+      public void run() {
+        background(0);
+        fill(255, 255, 0);
+        ellipse(xLight, height * 0.5, 20, 20);
+      }
     }
+    );
 
-    textFont(tiny);
+    show(500, 0, new Runnable() {
+      public void run() {
+        text("This is light", xText, height * 0.2);
+      }
+    }
+    );
 
-    if (750 < m && m < 3000) {
-      text("Hello!", xLight, height * 0.45);
-    }
+    show(250, 2000, new Runnable() {
+      public void run() {
+        textFont(tiny);
 
-    textFont(small);
+        text("Hello!", xLight, height * 0.45);
+      }
+    }
+    );
 
-    if (m > 1000) {
-      text("Light does not give a single sh*t", xText, height * 0.6);
+    show(750, 0, new Runnable() {
+      public void run() {
+        textFont(small);
+
+
+        text("Light does not give a single sh*t", xText, height * 0.6);
+      }
     }
-    if (m > 2000) {
-      text("about nothing whatsoever", xText, height * 0.66);
+    );
+    show(750, 0, new Runnable() {
+      public void run() {
+        text("about nothing whatsoever", xText, height * 0.66);
+      }
     }
-    if (m > 3500) {
-      text("its speed is always the same", xText, height * 0.8);
+    );
+    show(750, 0, new Runnable() {
+      public void run() {
+        text("its speed is always the same", xText, height * 0.8);
+      }
     }
-    if (m > 4500) {
-      text("ALWAYS!!!111one", xText, height * 0.86);
+    );
+    show(750, 0, new Runnable() {
+      public void run() {
+        text("ALWAYS!!!111one", xText, height * 0.86);
+      }
     }
+    );
   }
 }
