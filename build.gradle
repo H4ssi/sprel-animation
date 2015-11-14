@@ -1,0 +1,19 @@
+apply plugin: 'java'
+
+sourceCompatibility = 6
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ["src"]
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.processing:core:3.0"
+}
