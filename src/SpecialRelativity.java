@@ -4,12 +4,11 @@ import processing.core.PFont;
 import java.util.ArrayList;
 
 public class SpecialRelativity extends PApplet {
+    private ArrayList<Scene> scenes = new ArrayList<>();
 
-    ArrayList<Scene> scenes = new ArrayList<>();
-
-    PFont big;
-    PFont small;
-    PFont tiny;
+    private PFont big;
+    private PFont small;
+    private PFont tiny;
 
     @Override
     public void settings() {
@@ -17,6 +16,7 @@ public class SpecialRelativity extends PApplet {
         size(480, 480);
     }
 
+    @Override
     public void setup() {
         big = loadFont("FiraSans-Regular-48.vlw");
         small = loadFont("FiraSans-Regular-20.vlw");
@@ -26,15 +26,15 @@ public class SpecialRelativity extends PApplet {
         scenes.add(new LightIntro());
     }
 
+    @Override
     public void draw() {
         textFont(big);
         textAlign(CENTER);
 
-        long m = millis();
         for (Scene scene : scenes) {
-            if (!scene.end) {
+            if (!scene.isEnd()) {
                 scene.draw();
-                if (!scene.end) {
+                if (!scene.isEnd()) {
                     break;
                 }
             }
@@ -42,10 +42,10 @@ public class SpecialRelativity extends PApplet {
     }
 
     private abstract class Scene {
-        boolean end;
-        int m;
-
-        Integer start;
+        private boolean end;
+        private Integer start;
+        private int cur;
+        private ArrayList<Runnable> runs = new ArrayList<>();
 
         public void draw() {
             if (start == null) {
@@ -54,9 +54,6 @@ public class SpecialRelativity extends PApplet {
 
             runs.forEach(Runnable::run);
         }
-
-        int cur = 0;
-        ArrayList<Runnable> runs = new ArrayList<>();
 
         public void show(final int delay, final int length, final Runnable run) {
             cur += delay;
@@ -68,10 +65,17 @@ public class SpecialRelativity extends PApplet {
                     }
             );
         }
+
+        protected void end() {
+            end = true;
+        }
+
+        public boolean isEnd() {
+            return end;
+        }
     }
 
     private class Opening extends Scene {
-
         public Opening() {
             background(0);
 
@@ -81,14 +85,13 @@ public class SpecialRelativity extends PApplet {
             show(1000, 0, () -> text("is hard", width / 2f, height / 1.5f)
             );
 
-            show(1000, 0, () -> end = true
+            show(1000, 0, this::end
             );
         }
     }
 
     private class LightIntro extends Scene {
         public LightIntro() {
-
             final int xLight = 100;
             final int xText = width / 2;
 
