@@ -59,11 +59,14 @@ public class SpecialRelativity extends PApplet {
             cur += delay;
             final int off = cur;
             runs.add(() -> {
-                        if (start + off <= millis() && (length == 0 || millis() <= start + off + length)) {
-                            run.run();
-                        }
-                    }
-            );
+                if (start + off <= millis() && (length == 0 || millis() <= start + off + length)) {
+                    run.run();
+                }
+            });
+        }
+
+        public void show(int delay, Runnable run) {
+            show(delay, 0, run);
         }
 
         protected void end() {
@@ -79,14 +82,11 @@ public class SpecialRelativity extends PApplet {
         public Opening() {
             background(0);
 
-            show(0, 0, () -> text("Special Relativity", width / 2f, height / 2f)
-            );
+            show(0, () -> text("Special Relativity", width / 2f, height / 2f));
 
-            show(1000, 0, () -> text("is hard", width / 2f, height / 1.5f)
-            );
+            show(1000, () -> text("is hard", width / 2f, height / 1.5f));
 
-            show(1000, 0, this::end
-            );
+            show(1000, this::end);
         }
     }
 
@@ -95,35 +95,36 @@ public class SpecialRelativity extends PApplet {
             final int xLight = 100;
             final int xText = width / 2;
 
-            show(0, 0, () -> {
-                        background(0);
-                        fill(255, 255, 0);
-                        ellipse(xLight, height * 0.5f, 20, 20);
-                    }
-            );
+            show(0, () -> {
+                background(0);
+                fill(255, 255, 0);
+                ellipse(xLight, height * 0.5f, 20, 20);
+            });
 
-            show(500, 0, () -> text("This is light", xText, height * 0.2f)
-            );
+            show(500, () -> text("This is light", xText, height * 0.2f));
 
             show(250, 2000, () -> {
-                        textFont(tiny);
+                textFont(tiny);
 
-                        text("Hello!", xLight, height * 0.45f);
-                    }
-            );
+                text("Hello!", xLight, height * 0.45f);
+            });
 
-            show(750, 0, () -> {
-                        textFont(small);
+            show(750, () -> {
+                textFont(small);
 
-                        text("Light does not give a single sh*t", xText, height * 0.6f);
-                    }
-            );
-            show(750, 0, () -> text("about nothing whatsoever", xText, height * 0.66f)
-            );
-            show(750, 0, () -> text("its speed is always the same", xText, height * 0.8f)
-            );
-            show(750, 0, () -> text("ALWAYS!!!111one", xText, height * 0.86f)
-            );
+                text("Light does not give a single sh*t", xText, height * 0.6f);
+            });
+            show(750, () -> text("about nothing whatsoever", xText, height * 0.66f));
+            show(750, () -> text("its speed is always the same", xText, height * 0.8f));
+            show(750, () -> text("ALWAYS!!!111one", xText, height * 0.86f));
+
+            show(250, 500, () -> {
+                textFont(tiny);
+
+                text("Gotta go fast!", xLight, height * 0.45f);
+            });
+
+            show(0, this::end);
         }
     }
 }
