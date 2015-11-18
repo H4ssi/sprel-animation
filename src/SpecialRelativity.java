@@ -6,9 +6,9 @@ import java.util.ArrayList;
 public class SpecialRelativity extends PApplet {
     private ArrayList<Scene> scenes = new ArrayList<>();
 
-    private PFont big;
-    private PFont small;
-    private PFont tiny;
+    private PFont bigFont;
+    private PFont smallFont;
+    private PFont tinyFont;
 
     @Override
     public void settings() {
@@ -18,9 +18,9 @@ public class SpecialRelativity extends PApplet {
 
     @Override
     public void setup() {
-        big = loadFont("FiraSans-Regular-48.vlw");
-        small = loadFont("FiraSans-Regular-20.vlw");
-        tiny = loadFont("FiraSans-Regular-16.vlw");
+        bigFont = loadFont("FiraSans-Regular-48.vlw");
+        smallFont = loadFont("FiraSans-Regular-20.vlw");
+        tinyFont = loadFont("FiraSans-Regular-16.vlw");
 
         scenes.add(new Opening());
         scenes.add(new LightIntro());
@@ -28,9 +28,6 @@ public class SpecialRelativity extends PApplet {
 
     @Override
     public void draw() {
-        textFont(big);
-        textAlign(CENTER);
-
         for (Scene scene : scenes) {
             if (!scene.isEnd()) {
                 scene.draw();
@@ -55,7 +52,7 @@ public class SpecialRelativity extends PApplet {
             runs.forEach(Runnable::run);
         }
 
-        public void show(final int delay, final int length, final Runnable run) {
+        private void show(final int delay, final int length, final Runnable run) {
             cur += delay;
             final int off = cur;
             runs.add(() -> {
@@ -65,28 +62,55 @@ public class SpecialRelativity extends PApplet {
             });
         }
 
-        public void show(int delay, Runnable run) {
-            show(delay, 0, run);
-        }
-
-        protected void end() {
-            end = true;
-        }
-
         public boolean isEnd() {
             return end;
         }
+
+        protected class Builder {
+            private final Runnable runnable;
+
+            private Builder() {
+                runnable = () -> {
+                };
+            }
+
+            private Builder(Runnable runnable) {
+                this.runnable = runnable;
+            }
+
+            public Builder then(Runnable runnable) {
+                return new Builder(() -> {
+                    Builder.this.runnable.run();
+                    runnable.run();
+                });
+            }
+
+            public Builder end() {
+                return then(() -> end = true);
+            }
+
+            public void when(int delay, int length) {
+                Scene.this.show(delay, length, runnable);
+            }
+
+            public void when(int delay) {
+                Scene.this.show(delay, 0, runnable);
+            }
+        }
+
+        protected final Builder b = new Builder();
     }
 
     private class Opening extends Scene {
         public Opening() {
-            background(0);
-
-            show(0, () -> text("Special Relativity", width / 2f, height / 2f));
-
-            show(1000, () -> text("is hard", width / 2f, height / 1.5f));
-
-            show(1000, this::end);
+            b.then(() -> {
+                background(0);
+                textFont(bigFont);
+                textAlign(CENTER);
+            }).when(0);
+            b.then(() -> text("Special Relativity", width / 2f, height / 2f)).when(0);
+            b.then(() -> text("is hard", width / 2f, height / 1.5f)).when(1000);
+            b.end().when(1000);
         }
     }
 
@@ -95,36 +119,27 @@ public class SpecialRelativity extends PApplet {
             final int xLight = 100;
             final int xText = width / 2;
 
-            show(0, () -> {
+            Builder small = b.then(() -> textFont(smallFont));
+            Builder tiny = b.then(() -> textFont(tinyFont));
+
+            b.then(() -> {
                 background(0);
                 fill(255, 255, 0);
                 ellipse(xLight, height * 0.5f, 20, 20);
-            });
+            }).when(0);
 
-            show(500, () -> text("This is light", xText, height * 0.2f));
+            small.then(() -> text("This is light", xText, height * 0.2f)).when(500);
 
-            show(250, 2000, () -> {
-                textFont(tiny);
+            tiny.then(() -> text("Hello!", xLight, height * 0.45f)).when(250, 2000);
 
-                text("Hello!", xLight, height * 0.45f);
-            });
+            small.then(() -> text("Light does not give a single sh*t", xText, height * 0.6f)).when(750);
+            small.then(() -> text("about nothing whatsoever", xText, height * 0.66f)).when(750);
+            small.then(() -> text("its speed is always the same", xText, height * 0.8f)).when(750);
+            small.then(() -> text("ALWAYS!!!111one", xText, height * 0.86f)).when(750);
 
-            show(750, () -> {
-                textFont(small);
+            tiny.then(() -> text("Gotta go fast!", xLight, height * 0.45f)).when(250, 500);
 
-                text("Light does not give a single sh*t", xText, height * 0.6f);
-            });
-            show(750, () -> text("about nothing whatsoever", xText, height * 0.66f));
-            show(750, () -> text("its speed is always the same", xText, height * 0.8f));
-            show(750, () -> text("ALWAYS!!!111one", xText, height * 0.86f));
-
-            show(250, 500, () -> {
-                textFont(tiny);
-
-                text("Gotta go fast!", xLight, height * 0.45f);
-            });
-
-            show(0, this::end);
+            b.end().when(250);
         }
     }
 }
