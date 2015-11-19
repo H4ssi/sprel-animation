@@ -22,8 +22,9 @@ public class SpecialRelativity extends PApplet {
         smallFont = loadFont("FiraSans-Regular-20.vlw");
         tinyFont = loadFont("FiraSans-Regular-16.vlw");
 
-        scenes.add(new Opening());
-        scenes.add(new LightIntro());
+        //scenes.add(new Opening());
+        //scenes.add(new LightIntro());
+        scenes.add(new Stationary());
     }
 
     @Override
@@ -52,9 +53,9 @@ public class SpecialRelativity extends PApplet {
             runs.forEach(Runnable::run);
         }
 
-        private void show(final int delay, final int length, final Runnable run) {
+        private void show(int delay, int length, Runnable run) {
             cur += delay;
-            final int off = cur;
+            int off = cur;
             runs.add(() -> {
                 if (start + off <= millis() && (length == 0 || millis() <= start + off + length)) {
                     run.run();
@@ -116,8 +117,8 @@ public class SpecialRelativity extends PApplet {
 
     private class LightIntro extends Scene {
         public LightIntro() {
-            final int xLight = 100;
-            final int xText = width / 2;
+            int xLight = 100;
+            int xText = width / 2;
 
             Builder small = b.then(() -> textFont(smallFont));
             Builder tiny = b.then(() -> textFont(tinyFont));
@@ -140,6 +141,52 @@ public class SpecialRelativity extends PApplet {
             tiny.then(() -> text("Gotta go fast!", xLight, height * 0.45f)).when(250, 500);
 
             b.end().when(250);
+        }
+    }
+
+    private class Stationary extends Scene {
+        public Stationary() {
+            b.then(() -> background(0)).when(0);
+            b.then(() -> {
+                stroke(0, 255, 0);
+                strokeWeight(4);
+                fill(0);
+                rect(10, 10, 300, 300);
+            }).when(0);
+
+            b.then(() -> {
+                fill(0, 255, 0);
+                text("This is a spaceship", width / 2, 350);
+            }).when(250);
+
+            int wallOffset = 30;
+            int mirrorWidth = 50;
+
+            b.then(() -> {
+                stroke(100, 100, 100);
+                strokeWeight(8);
+                line(10 + wallOffset, 10 + wallOffset, 10 + wallOffset + mirrorWidth, 10 + wallOffset);
+                line(10 + 300 - wallOffset, 10 + 300 - wallOffset, 10 + 300 - wallOffset, 10 + 300 - wallOffset - mirrorWidth);
+            }).when(250);
+
+            b.then(() -> {
+                fill(100, 100, 100);
+                text("These are mirrors", width / 2, 400);
+            }).when(250);
+
+            b.then(() -> {
+                strokeWeight(0);
+                stroke(255, 0, 0);
+                fill(255, 0, 0);
+
+                triangle(10 + wallOffset + mirrorWidth / 2, 10 + 300, 10 + wallOffset, 10 + 300 - wallOffset, 10 + wallOffset + mirrorWidth, 10 + 300 - wallOffset);
+                triangle(10, 10 + 300 - wallOffset - mirrorWidth / 2, 10 + wallOffset, 10 + 300 - wallOffset - mirrorWidth, 10 + wallOffset, 10 + 300 - wallOffset);
+            }).when(250);
+
+            b.then(() -> {
+                fill(255, 0, 0);
+                text("These are light sources", width / 2, 450);
+            }).when(250);
         }
     }
 }
