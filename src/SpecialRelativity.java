@@ -2,6 +2,7 @@ import processing.core.PApplet;
 import processing.core.PFont;
 
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 public class SpecialRelativity extends PApplet {
     private ArrayList<Scene> scenes = new ArrayList<>();
@@ -53,12 +54,12 @@ public class SpecialRelativity extends PApplet {
             runs.forEach(Runnable::run);
         }
 
-        private void show(int delay, int length, Runnable run) {
+        private void show(int delay, int length, Consumer<Integer> run) {
             cur += delay;
             int off = cur;
             runs.add(() -> {
                 if (start + off <= millis() && (length == 0 || millis() <= start + off + length)) {
-                    run.run();
+                    run.accept(millis() - start - off);
                 }
             });
         }
@@ -68,22 +69,26 @@ public class SpecialRelativity extends PApplet {
         }
 
         protected class Builder {
-            private final Runnable runnable;
+            private final Consumer<Integer> sceneSlice;
 
             private Builder() {
-                runnable = () -> {
+                sceneSlice = (i) -> {
                 };
             }
 
-            private Builder(Runnable runnable) {
-                this.runnable = runnable;
+            private Builder(Consumer<Integer> sceneSlice) {
+                this.sceneSlice = sceneSlice;
             }
 
-            public Builder then(Runnable runnable) {
-                return new Builder(() -> {
-                    Builder.this.runnable.run();
-                    runnable.run();
+            public Builder then(Consumer<Integer> sceneSlice) {
+                return new Builder((i) -> {
+                    Builder.this.sceneSlice.accept(i);
+                    sceneSlice.accept(i);
                 });
+            }
+
+            public Builder then(Runnable sceneSlice) {
+                return then((i) -> sceneSlice.run());
             }
 
             public Builder end() {
@@ -91,11 +96,11 @@ public class SpecialRelativity extends PApplet {
             }
 
             public void when(int delay, int length) {
-                Scene.this.show(delay, length, runnable);
+                Scene.this.show(delay, length, sceneSlice);
             }
 
             public void when(int delay) {
-                Scene.this.show(delay, 0, runnable);
+                Scene.this.show(delay, 0, sceneSlice);
             }
         }
 
@@ -187,6 +192,34 @@ public class SpecialRelativity extends PApplet {
                 fill(255, 0, 0);
                 text("These are light sources", width / 2, 450);
             }).when(250);
+
+            float c = 75f / 1000f;
+
+            float t = (300 - 2 * wallOffset - mirrorWidth) / c;
+
+            b.then((i) -> {
+                fill(255, 255, 0);
+                stroke(255, 255, 0);
+                ellipse(10 + wallOffset + mirrorWidth / 2 + i * c, 10 + 300 - wallOffset - mirrorWidth / 2, mirrorWidth, mirrorWidth);
+            }).when(1000, (int) t);
+
+            b.then((i) -> {
+                fill(255, 255, 0);
+                stroke(255, 255, 0);
+                ellipse(10 + wallOffset + mirrorWidth / 2, 10 + 300 - wallOffset - mirrorWidth / 2 - i * c, mirrorWidth, mirrorWidth);
+            }).when(0, (int) t);
+
+            b.then((i) -> {
+                fill(255, 255, 0);
+                stroke(255, 255, 0);
+                ellipse(10 + 300 - wallOffset - mirrorWidth / 2 - i * c, 10 + 300 - wallOffset - mirrorWidth / 2, mirrorWidth, mirrorWidth);
+            }).when((int) t, (int) t);
+
+            b.then((i) -> {
+                fill(255, 255, 0);
+                stroke(255, 255, 0);
+                ellipse(10 + wallOffset + mirrorWidth / 2, 10 + wallOffset + mirrorWidth / 2 + i * c, mirrorWidth, mirrorWidth);
+            }).when(0, (int) t);
         }
     }
 }
