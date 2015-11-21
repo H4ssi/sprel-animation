@@ -176,7 +176,7 @@ public class SpecialRelativity extends PApplet {
 
             b.then(() -> {
                 fill(100, 100, 100);
-                text("These are mirrors", width / 2, 400);
+                text("These are mirrors", width / 2, 380);
             }).when(250);
 
             b.then(() -> {
@@ -190,36 +190,52 @@ public class SpecialRelativity extends PApplet {
 
             b.then(() -> {
                 fill(255, 0, 0);
-                text("These are light sources", width / 2, 450);
+                text("These are light sources", width / 2, 410);
+            }).when(250);
+
+            b.then(() -> {
+                fill(255, 255, 0);
+                text("No let us fire a photon each", width / 2, 440);
             }).when(250);
 
             float c = 75f / 1000f;
 
             float t = (300 - 2 * wallOffset - mirrorWidth) / c;
 
+            // light to right
             b.then((i) -> {
                 fill(255, 255, 0);
                 stroke(255, 255, 0);
                 ellipse(10 + wallOffset + mirrorWidth / 2 + i * c, 10 + 300 - wallOffset - mirrorWidth / 2, mirrorWidth, mirrorWidth);
             }).when(1000, (int) t);
 
+            // light up
             b.then((i) -> {
                 fill(255, 255, 0);
                 stroke(255, 255, 0);
                 ellipse(10 + wallOffset + mirrorWidth / 2, 10 + 300 - wallOffset - mirrorWidth / 2 - i * c, mirrorWidth, mirrorWidth);
             }).when(0, (int) t);
 
+            // light left
             b.then((i) -> {
                 fill(255, 255, 0);
                 stroke(255, 255, 0);
                 ellipse(10 + 300 - wallOffset - mirrorWidth / 2 - i * c, 10 + 300 - wallOffset - mirrorWidth / 2, mirrorWidth, mirrorWidth);
             }).when((int) t, (int) t);
 
+            // light down
             b.then((i) -> {
                 fill(255, 255, 0);
                 stroke(255, 255, 0);
                 ellipse(10 + wallOffset + mirrorWidth / 2, 10 + wallOffset + mirrorWidth / 2 + i * c, mirrorWidth, mirrorWidth);
             }).when(0, (int) t);
+
+            // light back at start
+            b.then(() -> {
+                fill(255, 255, 0);
+                stroke(255, 255, 0);
+                ellipse(10 + wallOffset + mirrorWidth / 2, 10 + 300 - wallOffset - mirrorWidth / 2, mirrorWidth, mirrorWidth);
+            }).when((int) t, 100);
         }
     }
 }
