@@ -290,6 +290,42 @@ public class SpecialRelativity extends PApplet {
                         triangle(10 + WALL_OFFSET + MIRROR_WIDTH / 2 + p, 10 + 300, 10 + WALL_OFFSET + p, 10 + 300 - WALL_OFFSET, 10 + WALL_OFFSET + MIRROR_WIDTH + p, 10 + 300 - WALL_OFFSET);
                         triangle(10 + p, 10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2, 10 + WALL_OFFSET + p, 10 + 300 - WALL_OFFSET - MIRROR_WIDTH, 10 + WALL_OFFSET + p, 10 + 300 - WALL_OFFSET);
                     }).duration((int) t);
+
+
+            float yDistance = 300 - WALL_OFFSET * 2 - MIRROR_WIDTH;
+            float tUpDown = (float) Math.sqrt(yDistance * yDistance / (C * C - v * v));
+            float xDistance = v * tUpDown;
+
+            b
+                    // light up
+                    .then((i) -> {
+                        float p = i * v;
+                        float iLeft = tUpDown - i;
+                        float weightStart = iLeft / tUpDown;
+                        float weightDest = i / tUpDown;
+                        fill(255, 255, 0);
+                        stroke(255, 255, 0);
+                        ellipse(10 + WALL_OFFSET + MIRROR_WIDTH / 2 + weightStart * 0 + weightDest * xDistance,
+                                10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2 - weightStart * 0 - weightDest * yDistance,
+                                MIRROR_WIDTH,
+                                MIRROR_WIDTH);
+                    }).duration((int) tUpDown)
+
+                    // light down
+                    .then((i) -> {
+                        float p = i * v;
+                        float iLeft = tUpDown - i;
+                        float weightStart = iLeft / tUpDown;
+                        float weightDest = i / tUpDown;
+                        fill(255, 255, 0);
+                        stroke(255, 255, 0);
+                        ellipse(10 + WALL_OFFSET + MIRROR_WIDTH / 2 + xDistance + weightStart * 0 + weightDest * xDistance,
+                                10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2 - weightStart * yDistance - weightDest * 0,
+                                MIRROR_WIDTH,
+                                MIRROR_WIDTH);
+                    }).duration((int) tUpDown)
+                    .wait((int) t)
+                    .end().when();
         }
     }
 }
