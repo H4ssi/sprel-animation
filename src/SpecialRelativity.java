@@ -44,7 +44,6 @@ public class SpecialRelativity extends PApplet {
     private abstract class Scene {
         private boolean end;
         private Integer start;
-        private int cur;
         private ArrayList<Runnable> runs = new ArrayList<>();
 
         public void draw() {
@@ -55,12 +54,10 @@ public class SpecialRelativity extends PApplet {
             runs.forEach(Runnable::run);
         }
 
-        private void show(int delay, int length, Consumer<Integer> run) {
-            cur += delay;
-            int off = cur;
+        private void show(int offset, int duration, Consumer<Integer> run) {
             runs.add(() -> {
-                if (start + off <= millis() && (length == 0 || millis() <= start + off + length)) {
-                    run.accept(millis() - start - off);
+                if (start + offset <= millis() && (duration == 0 || millis() <= start + offset + duration)) {
+                    run.accept(millis() - start - offset);
                 }
             });
         }
@@ -106,9 +103,17 @@ public class SpecialRelativity extends PApplet {
                 return new Builder(start + millis, sceneSlice);
             }
 
+            public Builder wait(Builder previous) {
+                return wait(previous.start);
+            }
+
+            public Builder chain(Builder next) {
+                return new Builder(start, next.sceneSlice);
+            }
+
             public Builder duration(int millis) {
                 Scene.this.show(start, millis, sceneSlice);
-                return new Builder(millis);
+                return new Builder(start + millis);
             }
 
             public Builder when(int delay, int length) {
@@ -149,23 +154,27 @@ public class SpecialRelativity extends PApplet {
             Builder small = b.then(() -> textFont(smallFont));
             Builder tiny = b.then(() -> textFont(tinyFont));
 
-            b.then(() -> {
-                background(0);
-                fill(255, 255, 0);
-                ellipse(xLight, height * 0.5f, 20, 20);
-            }).when();
+            b
+                    .then(() -> {
+                        background(0);
+                        fill(255, 255, 0);
+                        ellipse(xLight, height * 0.5f, 20, 20);
+                    })
+                    .when()
 
-            small.then(() -> text("This is light", xText, height * 0.2f)).when(500);
+                    .chain(small)
+                    .then(() -> text("This is light", xText, height * 0.2f)).when(500)
 
-            tiny.then(() -> text("Hello!", xLight, height * 0.45f)).when(250, 2000);
+                    .chain(tiny)
+                    .then(() -> text("Hello!", xLight, height * 0.45f)).when(250, 2000).wait(-2000)
 
-            small
+                    .chain(small)
                     .then(() -> text("Light does not give a single sh*t", xText, height * 0.6f)).when(750)
                     .then(() -> text("about nothing whatsoever", xText, height * 0.66f)).when(750)
                     .then(() -> text("its speed is always the same", xText, height * 0.8f)).when(750)
-                    .then(() -> text("ALWAYS!!!111one", xText, height * 0.86f)).when(750);
+                    .then(() -> text("ALWAYS!!!111one", xText, height * 0.86f)).when(750)
 
-            tiny
+                    .chain(tiny)
                     .then(() -> text("Gotta go fast!", xLight, height * 0.45f)).when(250, 500)
                     .end().when();
         }
@@ -179,7 +188,7 @@ public class SpecialRelativity extends PApplet {
     private class Stationary extends Scene {
         public Stationary() {
 
-            b
+            Builder prev = b
                     .then(() -> background(0))
                     .when(0)
                     .then(() -> {
@@ -223,7 +232,7 @@ public class SpecialRelativity extends PApplet {
 
             // light to right
             b
-                    .wait(1000)
+                    .wait(prev)
                     .then((i) -> {
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
@@ -263,7 +272,7 @@ public class SpecialRelativity extends PApplet {
 
     private class Moving extends Scene {
         public Moving() {
-            float v = C / 2;
+            float v = C * 0.8f;
             float t = 3 * 300 / v;
             b
                     .then(() -> background(0))
@@ -296,10 +305,34 @@ public class SpecialRelativity extends PApplet {
             float tUpDown = (float) Math.sqrt(yDistance * yDistance / (C * C - v * v));
             float xDistance = v * tUpDown;
 
+            float bogusForth = yDistance / (C - v);
+            float bogusBack = yDistance / (C + v);
+
+            b
+                    // light to right
+                    .then((i) -> {
+                        fill(255, 255, 0);
+                        stroke(255, 255, 0);
+                        ellipse(10 + WALL_OFFSET + MIRROR_WIDTH / 2 + i * C,
+                                10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2,
+                                MIRROR_WIDTH,
+                                MIRROR_WIDTH);
+                    })
+                    .duration((int) bogusForth)
+                    // light left
+                    .then((i) -> {
+                        fill(255, 255, 0);
+                        stroke(255, 255, 0);
+                        ellipse(10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2 + v * bogusForth - i * C,
+                                10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2,
+                                MIRROR_WIDTH,
+                                MIRROR_WIDTH);
+                    })
+                    .duration((int) bogusBack);
+
             b
                     // light up
                     .then((i) -> {
-                        float p = i * v;
                         float iLeft = tUpDown - i;
                         float weightStart = iLeft / tUpDown;
                         float weightDest = i / tUpDown;
@@ -309,11 +342,10 @@ public class SpecialRelativity extends PApplet {
                                 10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2 - weightStart * 0 - weightDest * yDistance,
                                 MIRROR_WIDTH,
                                 MIRROR_WIDTH);
-                    }).duration((int) tUpDown)
-
+                    })
+                    .duration((int) tUpDown)
                     // light down
                     .then((i) -> {
-                        float p = i * v;
                         float iLeft = tUpDown - i;
                         float weightStart = iLeft / tUpDown;
                         float weightDest = i / tUpDown;
@@ -323,7 +355,9 @@ public class SpecialRelativity extends PApplet {
                                 10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2 - weightStart * yDistance - weightDest * 0,
                                 MIRROR_WIDTH,
                                 MIRROR_WIDTH);
-                    }).duration((int) tUpDown)
+                    })
+                    .duration((int) tUpDown)
+
                     .wait((int) t)
                     .end().when();
         }
