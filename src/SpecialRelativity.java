@@ -182,10 +182,13 @@ public class SpecialRelativity extends PApplet {
 
     private static final float C = 75f / 1000f;
 
+    public static final int SHIP_SIZE = 300;
+    public static final int MARGIN = 10;
     private static final int WALL_OFFSET = 30;
     private static final int MIRROR_WIDTH = 50;
 
     private class Stationary extends Scene {
+
         public Stationary() {
 
             Builder prev = b
@@ -195,40 +198,40 @@ public class SpecialRelativity extends PApplet {
                         stroke(0, 255, 0);
                         strokeWeight(4);
                         fill(0);
-                        rect(10, 10, 300, 300);
+                        rect(MARGIN, MARGIN, SHIP_SIZE, SHIP_SIZE);
                     })
                     .then(() -> {
                         fill(0, 255, 0);
-                        text("This is a spaceship", width / 2, 350);
+                        text("This is a spaceship", width / 2, 2 * MARGIN + SHIP_SIZE + 30);
                     }).when(250)
                     .then(() -> {
                         stroke(100, 100, 100);
                         strokeWeight(8);
-                        line(10 + WALL_OFFSET, 10 + WALL_OFFSET, 10 + WALL_OFFSET + MIRROR_WIDTH, 10 + WALL_OFFSET);
-                        line(10 + 300 - WALL_OFFSET, 10 + 300 - WALL_OFFSET, 10 + 300 - WALL_OFFSET, 10 + 300 - WALL_OFFSET - MIRROR_WIDTH);
+                        line(MARGIN + WALL_OFFSET, MARGIN + WALL_OFFSET, MARGIN + WALL_OFFSET + MIRROR_WIDTH, MARGIN + WALL_OFFSET);
+                        line(MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH);
                     }).when(250)
                     .then(() -> {
                         fill(100, 100, 100);
-                        text("These are mirrors", width / 2, 380);
+                        text("These are mirrors", width / 2, 2 * MARGIN + SHIP_SIZE + 60);
                     }).when(250)
                     .then(() -> {
                         strokeWeight(0);
                         stroke(255, 0, 0);
                         fill(255, 0, 0);
 
-                        triangle(10 + WALL_OFFSET + MIRROR_WIDTH / 2, 10 + 300, 10 + WALL_OFFSET, 10 + 300 - WALL_OFFSET, 10 + WALL_OFFSET + MIRROR_WIDTH, 10 + 300 - WALL_OFFSET);
-                        triangle(10, 10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2, 10 + WALL_OFFSET, 10 + 300 - WALL_OFFSET - MIRROR_WIDTH, 10 + WALL_OFFSET, 10 + 300 - WALL_OFFSET);
+                        triangle(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2, MARGIN + SHIP_SIZE, MARGIN + WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + WALL_OFFSET + MIRROR_WIDTH, MARGIN + SHIP_SIZE - WALL_OFFSET);
+                        triangle(MARGIN, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2, MARGIN + WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH, MARGIN + WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET);
                     }).when(250)
                     .then(() -> {
                         fill(255, 0, 0);
-                        text("These are light sources", width / 2, 410);
+                        text("These are light sources", width / 2, 2 * MARGIN + SHIP_SIZE + 90);
                     }).when(250)
                     .then(() -> {
                         fill(255, 255, 0);
-                        text("No let us fire a photon each", width / 2, 440);
+                        text("No let us fire a photon each", width / 2, 2 * MARGIN + SHIP_SIZE + 120);
                     }).when(250);
 
-            float t = (300 - 2 * WALL_OFFSET - MIRROR_WIDTH) / C;
+            float t = (SHIP_SIZE - 2 * WALL_OFFSET - MIRROR_WIDTH) / C;
 
             // light to right
             b
@@ -236,35 +239,35 @@ public class SpecialRelativity extends PApplet {
                     .then((i) -> {
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
-                        ellipse(10 + WALL_OFFSET + MIRROR_WIDTH / 2 + i * C, 10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2, MIRROR_WIDTH, MIRROR_WIDTH);
+                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + i * C, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2, MIRROR_WIDTH, MIRROR_WIDTH);
                     })
 
                     // light up
                     .then((i) -> {
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
-                        ellipse(10 + WALL_OFFSET + MIRROR_WIDTH / 2, 10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2 - i * C, MIRROR_WIDTH, MIRROR_WIDTH);
+                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - i * C, MIRROR_WIDTH, MIRROR_WIDTH);
                     }).duration((int) t)
 
                     // light left
                     .then((i) -> {
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
-                        ellipse(10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2 - i * C, 10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2, MIRROR_WIDTH, MIRROR_WIDTH);
+                        ellipse(MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - i * C, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2, MIRROR_WIDTH, MIRROR_WIDTH);
                     })
 
                     // light down
                     .then((i) -> {
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
-                        ellipse(10 + WALL_OFFSET + MIRROR_WIDTH / 2, 10 + WALL_OFFSET + MIRROR_WIDTH / 2 + i * C, MIRROR_WIDTH, MIRROR_WIDTH);
+                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2, MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + i * C, MIRROR_WIDTH, MIRROR_WIDTH);
                     }).duration((int) t)
 
                     // light back at start
                     .then(() -> {
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
-                        ellipse(10 + WALL_OFFSET + MIRROR_WIDTH / 2, 10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2, MIRROR_WIDTH, MIRROR_WIDTH);
+                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2, MIRROR_WIDTH, MIRROR_WIDTH);
                     }).duration(100)
                     .end().when();
         }
@@ -273,7 +276,7 @@ public class SpecialRelativity extends PApplet {
     private class Moving extends Scene {
         public Moving() {
             float v = C * 0.8f;
-            float t = 3 * 300 / v;
+            float t = 3 * SHIP_SIZE / v;
             b
                     .then(() -> background(0))
                     .then((i) -> {
@@ -283,25 +286,25 @@ public class SpecialRelativity extends PApplet {
                         stroke(0, 255, 0);
                         strokeWeight(4);
                         fill(0);
-                        rect(10 + p, 10, 300, 300);
+                        rect(MARGIN + p, MARGIN, SHIP_SIZE, SHIP_SIZE);
 
                         // mirror
                         stroke(100, 100, 100);
                         strokeWeight(8);
-                        line(10 + WALL_OFFSET + p, 10 + WALL_OFFSET, 10 + WALL_OFFSET + MIRROR_WIDTH + p, 10 + WALL_OFFSET);
-                        line(10 + 300 - WALL_OFFSET + p, 10 + 300 - WALL_OFFSET, 10 + 300 - WALL_OFFSET + p, 10 + 300 - WALL_OFFSET - MIRROR_WIDTH);
+                        line(MARGIN + WALL_OFFSET + p, MARGIN + WALL_OFFSET, MARGIN + WALL_OFFSET + MIRROR_WIDTH + p, MARGIN + WALL_OFFSET);
+                        line(MARGIN + SHIP_SIZE - WALL_OFFSET + p, MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET + p, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH);
 
                         // light sources
                         strokeWeight(0);
                         stroke(255, 0, 0);
                         fill(255, 0, 0);
 
-                        triangle(10 + WALL_OFFSET + MIRROR_WIDTH / 2 + p, 10 + 300, 10 + WALL_OFFSET + p, 10 + 300 - WALL_OFFSET, 10 + WALL_OFFSET + MIRROR_WIDTH + p, 10 + 300 - WALL_OFFSET);
-                        triangle(10 + p, 10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2, 10 + WALL_OFFSET + p, 10 + 300 - WALL_OFFSET - MIRROR_WIDTH, 10 + WALL_OFFSET + p, 10 + 300 - WALL_OFFSET);
+                        triangle(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + p, MARGIN + SHIP_SIZE, MARGIN + WALL_OFFSET + p, MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + WALL_OFFSET + MIRROR_WIDTH + p, MARGIN + SHIP_SIZE - WALL_OFFSET);
+                        triangle(MARGIN + p, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2, MARGIN + WALL_OFFSET + p, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH, MARGIN + WALL_OFFSET + p, MARGIN + SHIP_SIZE - WALL_OFFSET);
                     }).duration((int) t);
 
 
-            float yDistance = 300 - WALL_OFFSET * 2 - MIRROR_WIDTH;
+            float yDistance = SHIP_SIZE - WALL_OFFSET * 2 - MIRROR_WIDTH;
             float tUpDown = (float) Math.sqrt(yDistance * yDistance / (C * C - v * v));
             float xDistance = v * tUpDown;
 
@@ -313,8 +316,8 @@ public class SpecialRelativity extends PApplet {
                     .then((i) -> {
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
-                        ellipse(10 + WALL_OFFSET + MIRROR_WIDTH / 2 + i * C,
-                                10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2,
+                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + i * C,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
                                 MIRROR_WIDTH,
                                 MIRROR_WIDTH);
                     })
@@ -323,8 +326,8 @@ public class SpecialRelativity extends PApplet {
                     .then((i) -> {
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
-                        ellipse(10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2 + v * bogusForth - i * C,
-                                10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2,
+                        ellipse(MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 + v * bogusForth - i * C,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
                                 MIRROR_WIDTH,
                                 MIRROR_WIDTH);
                     })
@@ -338,8 +341,8 @@ public class SpecialRelativity extends PApplet {
                         float weightDest = i / tUpDown;
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
-                        ellipse(10 + WALL_OFFSET + MIRROR_WIDTH / 2 + weightStart * 0 + weightDest * xDistance,
-                                10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2 - weightStart * 0 - weightDest * yDistance,
+                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + weightStart * 0 + weightDest * xDistance,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - weightStart * 0 - weightDest * yDistance,
                                 MIRROR_WIDTH,
                                 MIRROR_WIDTH);
                     })
@@ -351,8 +354,8 @@ public class SpecialRelativity extends PApplet {
                         float weightDest = i / tUpDown;
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
-                        ellipse(10 + WALL_OFFSET + MIRROR_WIDTH / 2 + xDistance + weightStart * 0 + weightDest * xDistance,
-                                10 + 300 - WALL_OFFSET - MIRROR_WIDTH / 2 - weightStart * yDistance - weightDest * 0,
+                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + xDistance + weightStart * 0 + weightDest * xDistance,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - weightStart * yDistance - weightDest * 0,
                                 MIRROR_WIDTH,
                                 MIRROR_WIDTH);
                     })
