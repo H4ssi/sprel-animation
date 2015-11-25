@@ -25,7 +25,7 @@ public class SpecialRelativity extends PApplet {
 
         //scenes.add(new Opening());
         //scenes.add(new LightIntro());
-        //scenes.add(new Stationary());
+        scenes.add(new Stationary());
         scenes.add(new Moving());
     }
 
@@ -182,10 +182,13 @@ public class SpecialRelativity extends PApplet {
 
     private static final float C = 75f / 1000f;
 
-    public static final int SHIP_SIZE = 300;
-    public static final int MARGIN = 10;
-    private static final int WALL_OFFSET = 30;
-    private static final int MIRROR_WIDTH = 50;
+    public static final float SHIP_SIZE = 300;
+    public static final float MARGIN = 10;
+    private static final float WALL_OFFSET = 30;
+    private static final float MIRROR_WIDTH = 50;
+    private static final float PHOTON_SIZE = MIRROR_WIDTH / 2;
+    private static final float DIFF_MIRROR_TO_PHOTON = (MIRROR_WIDTH - PHOTON_SIZE) / 2;
+
 
     private class Stationary extends Scene {
 
@@ -219,8 +222,25 @@ public class SpecialRelativity extends PApplet {
                         stroke(255, 0, 0);
                         fill(255, 0, 0);
 
-                        triangle(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2, MARGIN + SHIP_SIZE, MARGIN + WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + WALL_OFFSET + MIRROR_WIDTH, MARGIN + SHIP_SIZE - WALL_OFFSET);
-                        triangle(MARGIN, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2, MARGIN + WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH, MARGIN + WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET);
+                        // upwards source
+                        triangle(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2,
+                                MARGIN + SHIP_SIZE,
+
+                                MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON,
+
+                                MARGIN + WALL_OFFSET + MIRROR_WIDTH - DIFF_MIRROR_TO_PHOTON,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON);
+
+                        // rightwards source
+                        triangle(MARGIN,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
+
+                                MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH + DIFF_MIRROR_TO_PHOTON,
+
+                                MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON);
                     }).when(250)
                     .then(() -> {
                         fill(255, 0, 0);
@@ -231,7 +251,7 @@ public class SpecialRelativity extends PApplet {
                         text("No let us fire a photon each", width / 2, 2 * MARGIN + SHIP_SIZE + 120);
                     }).when(250);
 
-            float t = (SHIP_SIZE - 2 * WALL_OFFSET - MIRROR_WIDTH) / C;
+            float t = (SHIP_SIZE - 2 * WALL_OFFSET - PHOTON_SIZE - DIFF_MIRROR_TO_PHOTON) / C;
 
             // light to right
             b
@@ -239,35 +259,50 @@ public class SpecialRelativity extends PApplet {
                     .then((i) -> {
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
-                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + i * C, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2, MIRROR_WIDTH, MIRROR_WIDTH);
+                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + i * C,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
+                                PHOTON_SIZE,
+                                PHOTON_SIZE);
                     })
 
                     // light up
                     .then((i) -> {
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
-                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - i * C, MIRROR_WIDTH, MIRROR_WIDTH);
+                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - i * C,
+                                PHOTON_SIZE,
+                                PHOTON_SIZE);
                     }).duration((int) t)
 
                     // light left
                     .then((i) -> {
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
-                        ellipse(MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - i * C, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2, MIRROR_WIDTH, MIRROR_WIDTH);
+                        ellipse(MARGIN + SHIP_SIZE - WALL_OFFSET - PHOTON_SIZE / 2 - i * C,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
+                                PHOTON_SIZE,
+                                PHOTON_SIZE);
                     })
 
                     // light down
                     .then((i) -> {
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
-                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2, MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + i * C, MIRROR_WIDTH, MIRROR_WIDTH);
+                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2,
+                                MARGIN + WALL_OFFSET + PHOTON_SIZE / 2 + i * C,
+                                PHOTON_SIZE,
+                                PHOTON_SIZE);
                     }).duration((int) t)
 
                     // light back at start
                     .then(() -> {
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
-                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2, MIRROR_WIDTH, MIRROR_WIDTH);
+                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
+                                PHOTON_SIZE,
+                                PHOTON_SIZE);
                     }).duration(100)
                     .end().when();
         }
@@ -299,12 +334,29 @@ public class SpecialRelativity extends PApplet {
                         stroke(255, 0, 0);
                         fill(255, 0, 0);
 
-                        triangle(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + p, MARGIN + SHIP_SIZE, MARGIN + WALL_OFFSET + p, MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + WALL_OFFSET + MIRROR_WIDTH + p, MARGIN + SHIP_SIZE - WALL_OFFSET);
-                        triangle(MARGIN + p, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2, MARGIN + WALL_OFFSET + p, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH, MARGIN + WALL_OFFSET + p, MARGIN + SHIP_SIZE - WALL_OFFSET);
+                        // upwards source
+                        triangle(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + p,
+                                MARGIN + SHIP_SIZE,
+
+                                MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON + p,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON,
+
+                                MARGIN + WALL_OFFSET + MIRROR_WIDTH - DIFF_MIRROR_TO_PHOTON + p,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON);
+
+                        // rightwards source
+                        triangle(MARGIN + p,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
+
+                                MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON + p,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH + DIFF_MIRROR_TO_PHOTON,
+
+                                MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON + p,
+                                MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON);
                     }).duration((int) t);
 
 
-            float yDistance = SHIP_SIZE - WALL_OFFSET * 2 - MIRROR_WIDTH;
+            float yDistance = SHIP_SIZE - WALL_OFFSET * 2 - PHOTON_SIZE - DIFF_MIRROR_TO_PHOTON;
             float tUpDown = (float) Math.sqrt(yDistance * yDistance / (C * C - v * v));
             float xDistance = v * tUpDown;
 
@@ -318,18 +370,18 @@ public class SpecialRelativity extends PApplet {
                         stroke(255, 255, 0);
                         ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + i * C,
                                 MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
-                                MIRROR_WIDTH,
-                                MIRROR_WIDTH);
+                                PHOTON_SIZE,
+                                PHOTON_SIZE);
                     })
                     .duration((int) bogusForth)
                     // light left
                     .then((i) -> {
                         fill(255, 255, 0);
                         stroke(255, 255, 0);
-                        ellipse(MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 + v * bogusForth - i * C,
+                        ellipse(MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 + DIFF_MIRROR_TO_PHOTON + v * bogusForth - i * C,
                                 MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
-                                MIRROR_WIDTH,
-                                MIRROR_WIDTH);
+                                PHOTON_SIZE,
+                                PHOTON_SIZE);
                     })
                     .duration((int) bogusBack);
 
@@ -343,8 +395,8 @@ public class SpecialRelativity extends PApplet {
                         stroke(255, 255, 0);
                         ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + weightStart * 0 + weightDest * xDistance,
                                 MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - weightStart * 0 - weightDest * yDistance,
-                                MIRROR_WIDTH,
-                                MIRROR_WIDTH);
+                                PHOTON_SIZE,
+                                PHOTON_SIZE);
                     })
                     .duration((int) tUpDown)
                     // light down
@@ -356,8 +408,8 @@ public class SpecialRelativity extends PApplet {
                         stroke(255, 255, 0);
                         ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + xDistance + weightStart * 0 + weightDest * xDistance,
                                 MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - weightStart * yDistance - weightDest * 0,
-                                MIRROR_WIDTH,
-                                MIRROR_WIDTH);
+                                PHOTON_SIZE,
+                                PHOTON_SIZE);
                     })
                     .duration((int) tUpDown)
 
