@@ -189,19 +189,26 @@ public class SpecialRelativity extends PApplet {
     private static final float PHOTON_SIZE = MIRROR_WIDTH / 2;
     private static final float DIFF_MIRROR_TO_PHOTON = (MIRROR_WIDTH - PHOTON_SIZE) / 2;
 
+    private void withMargin(Runnable r) {
+        pushMatrix();
+        translate(MARGIN, MARGIN);
+        r.run();
+        popMatrix();
+    }
+
     private class Ship {
         private void drawBorder() {
             stroke(0, 255, 0);
             strokeWeight(4);
             fill(0);
-            rect(MARGIN, MARGIN, SHIP_SIZE, SHIP_SIZE);
+            rect(0, 0, SHIP_SIZE, SHIP_SIZE);
         }
 
         private void drawMirrors() {
             stroke(100, 100, 100);
             strokeWeight(8);
-            line(MARGIN + WALL_OFFSET, MARGIN + WALL_OFFSET, MARGIN + WALL_OFFSET + MIRROR_WIDTH, MARGIN + WALL_OFFSET);
-            line(MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH);
+            line(WALL_OFFSET, WALL_OFFSET, WALL_OFFSET + MIRROR_WIDTH, WALL_OFFSET);
+            line(SHIP_SIZE - WALL_OFFSET, SHIP_SIZE - WALL_OFFSET, SHIP_SIZE - WALL_OFFSET, SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH);
         }
 
         private void drawLightSources() {
@@ -210,24 +217,24 @@ public class SpecialRelativity extends PApplet {
             fill(255, 0, 0);
 
             // upwards source
-            triangle(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2,
-                    MARGIN + SHIP_SIZE,
+            triangle(WALL_OFFSET + MIRROR_WIDTH / 2,
+                    SHIP_SIZE,
 
-                    MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON,
-                    MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON,
+                    WALL_OFFSET + DIFF_MIRROR_TO_PHOTON,
+                    SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON,
 
-                    MARGIN + WALL_OFFSET + MIRROR_WIDTH - DIFF_MIRROR_TO_PHOTON,
-                    MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON);
+                    WALL_OFFSET + MIRROR_WIDTH - DIFF_MIRROR_TO_PHOTON,
+                    SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON);
 
             // rightwards source
-            triangle(MARGIN,
-                    MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
+            triangle(0,
+                    SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
 
-                    MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON,
-                    MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH + DIFF_MIRROR_TO_PHOTON,
+                    WALL_OFFSET + DIFF_MIRROR_TO_PHOTON,
+                    SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH + DIFF_MIRROR_TO_PHOTON,
 
-                    MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON,
-                    MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON);
+                    WALL_OFFSET + DIFF_MIRROR_TO_PHOTON,
+                    SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON);
         }
 
         private void draw() {
@@ -238,28 +245,27 @@ public class SpecialRelativity extends PApplet {
     }
 
     private class Stationary extends Scene {
-
         public Stationary() {
             Ship ship = new Ship();
             Builder prev = b
                     .then(() -> background(0))
                     .when(0)
                     .then(() -> {
-                        ship.drawBorder();
+                        withMargin(ship::drawBorder);
                     })
                     .then(() -> {
                         fill(0, 255, 0);
                         text("This is a spaceship", width / 2, 2 * MARGIN + SHIP_SIZE + 30);
                     }).when(250)
                     .then(() -> {
-                        ship.drawMirrors();
+                        withMargin(ship::drawMirrors);
                     }).when(250)
                     .then(() -> {
                         fill(100, 100, 100);
                         text("These are mirrors", width / 2, 2 * MARGIN + SHIP_SIZE + 60);
                     }).when(250)
                     .then(() -> {
-                        ship.drawLightSources();
+                        withMargin(ship::drawLightSources);
                     }).when(250)
                     .then(() -> {
                         fill(255, 0, 0);
@@ -336,12 +342,12 @@ public class SpecialRelativity extends PApplet {
             b
                     .then(() -> background(0))
                     .then((i) -> {
-                        float p = i * v;
-
-                        pushMatrix();
-                        translate(p, 0);
-                        ship.draw();
-                        popMatrix();
+                        withMargin(() -> {
+                            pushMatrix();
+                            translate(i * v, 0);
+                            ship.draw();
+                            popMatrix();
+                        });
                     }).duration((int) t);
 
 
