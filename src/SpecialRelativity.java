@@ -189,58 +189,77 @@ public class SpecialRelativity extends PApplet {
     private static final float PHOTON_SIZE = MIRROR_WIDTH / 2;
     private static final float DIFF_MIRROR_TO_PHOTON = (MIRROR_WIDTH - PHOTON_SIZE) / 2;
 
+    private class Ship {
+        private void drawBorder() {
+            stroke(0, 255, 0);
+            strokeWeight(4);
+            fill(0);
+            rect(MARGIN, MARGIN, SHIP_SIZE, SHIP_SIZE);
+        }
+
+        private void drawMirrors() {
+            stroke(100, 100, 100);
+            strokeWeight(8);
+            line(MARGIN + WALL_OFFSET, MARGIN + WALL_OFFSET, MARGIN + WALL_OFFSET + MIRROR_WIDTH, MARGIN + WALL_OFFSET);
+            line(MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH);
+        }
+
+        private void drawLightSources() {
+            strokeWeight(0);
+            stroke(255, 0, 0);
+            fill(255, 0, 0);
+
+            // upwards source
+            triangle(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2,
+                    MARGIN + SHIP_SIZE,
+
+                    MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON,
+                    MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON,
+
+                    MARGIN + WALL_OFFSET + MIRROR_WIDTH - DIFF_MIRROR_TO_PHOTON,
+                    MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON);
+
+            // rightwards source
+            triangle(MARGIN,
+                    MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
+
+                    MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON,
+                    MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH + DIFF_MIRROR_TO_PHOTON,
+
+                    MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON,
+                    MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON);
+        }
+
+        private void draw() {
+            drawBorder();
+            drawMirrors();
+            drawLightSources();
+        }
+    }
 
     private class Stationary extends Scene {
 
         public Stationary() {
-
+            Ship ship = new Ship();
             Builder prev = b
                     .then(() -> background(0))
                     .when(0)
                     .then(() -> {
-                        stroke(0, 255, 0);
-                        strokeWeight(4);
-                        fill(0);
-                        rect(MARGIN, MARGIN, SHIP_SIZE, SHIP_SIZE);
+                        ship.drawBorder();
                     })
                     .then(() -> {
                         fill(0, 255, 0);
                         text("This is a spaceship", width / 2, 2 * MARGIN + SHIP_SIZE + 30);
                     }).when(250)
                     .then(() -> {
-                        stroke(100, 100, 100);
-                        strokeWeight(8);
-                        line(MARGIN + WALL_OFFSET, MARGIN + WALL_OFFSET, MARGIN + WALL_OFFSET + MIRROR_WIDTH, MARGIN + WALL_OFFSET);
-                        line(MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH);
+                        ship.drawMirrors();
                     }).when(250)
                     .then(() -> {
                         fill(100, 100, 100);
                         text("These are mirrors", width / 2, 2 * MARGIN + SHIP_SIZE + 60);
                     }).when(250)
                     .then(() -> {
-                        strokeWeight(0);
-                        stroke(255, 0, 0);
-                        fill(255, 0, 0);
-
-                        // upwards source
-                        triangle(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2,
-                                MARGIN + SHIP_SIZE,
-
-                                MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON,
-
-                                MARGIN + WALL_OFFSET + MIRROR_WIDTH - DIFF_MIRROR_TO_PHOTON,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON);
-
-                        // rightwards source
-                        triangle(MARGIN,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
-
-                                MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH + DIFF_MIRROR_TO_PHOTON,
-
-                                MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON);
+                        ship.drawLightSources();
                     }).when(250)
                     .then(() -> {
                         fill(255, 0, 0);
@@ -310,6 +329,8 @@ public class SpecialRelativity extends PApplet {
 
     private class Moving extends Scene {
         public Moving() {
+            Ship ship = new Ship();
+
             float v = C * 0.8f;
             float t = 3 * SHIP_SIZE / v;
             b
@@ -317,42 +338,10 @@ public class SpecialRelativity extends PApplet {
                     .then((i) -> {
                         float p = i * v;
 
-                        // border
-                        stroke(0, 255, 0);
-                        strokeWeight(4);
-                        fill(0);
-                        rect(MARGIN + p, MARGIN, SHIP_SIZE, SHIP_SIZE);
-
-                        // mirror
-                        stroke(100, 100, 100);
-                        strokeWeight(8);
-                        line(MARGIN + WALL_OFFSET + p, MARGIN + WALL_OFFSET, MARGIN + WALL_OFFSET + MIRROR_WIDTH + p, MARGIN + WALL_OFFSET);
-                        line(MARGIN + SHIP_SIZE - WALL_OFFSET + p, MARGIN + SHIP_SIZE - WALL_OFFSET, MARGIN + SHIP_SIZE - WALL_OFFSET + p, MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH);
-
-                        // light sources
-                        strokeWeight(0);
-                        stroke(255, 0, 0);
-                        fill(255, 0, 0);
-
-                        // upwards source
-                        triangle(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + p,
-                                MARGIN + SHIP_SIZE,
-
-                                MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON + p,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON,
-
-                                MARGIN + WALL_OFFSET + MIRROR_WIDTH - DIFF_MIRROR_TO_PHOTON + p,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON);
-
-                        // rightwards source
-                        triangle(MARGIN + p,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
-
-                                MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON + p,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH + DIFF_MIRROR_TO_PHOTON,
-
-                                MARGIN + WALL_OFFSET + DIFF_MIRROR_TO_PHOTON + p,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - DIFF_MIRROR_TO_PHOTON);
+                        pushMatrix();
+                        translate(p, 0);
+                        ship.draw();
+                        popMatrix();
                     }).duration((int) t);
 
 
