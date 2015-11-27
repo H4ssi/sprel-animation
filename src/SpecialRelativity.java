@@ -1,8 +1,10 @@
 import processing.core.PApplet;
 import processing.core.PFont;
+import processing.core.PVector;
 
 import java.util.ArrayList;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class SpecialRelativity extends PApplet {
     private ArrayList<Scene> scenes = new ArrayList<>();
@@ -244,6 +246,34 @@ public class SpecialRelativity extends PApplet {
         }
     }
 
+    private static class LinearMovement {
+        private final PVector from;
+        private final PVector to;
+        private final float duration;
+
+        private LinearMovement(PVector from, PVector to, float duration) {
+            this.from = from;
+            this.to = to;
+            this.duration = duration;
+        }
+
+        public PVector at(float time) {
+            return PVector.lerp(from, to, Math.min(1f, Math.max(0f, time / duration)));
+        }
+
+        public static LinearMovement withTarget(PVector from, PVector to, float duration) {
+            return new LinearMovement(from, to, duration);
+        }
+
+        public static LinearMovement withDirection(PVector from, PVector direction, float duration) {
+            return withTarget(from, PVector.add(from, PVector.mult(direction, duration)), duration);
+        }
+
+        public static LinearMovement stationary(PVector pos) {
+            return withTarget(pos, pos, Float.MAX_VALUE);
+        }
+    }
+
     private class Stationary extends Scene {
         public Stationary() {
             Ship ship = new Ship();
@@ -278,57 +308,30 @@ public class SpecialRelativity extends PApplet {
 
             float t = (SHIP_SIZE - 2 * WALL_OFFSET - PHOTON_SIZE - DIFF_MIRROR_TO_PHOTON) / C;
 
-            // light to right
+            LinearMovement rightwards = LinearMovement.withDirection(new PVector(0f, 0f), new PVector(C, 0f), t);
+            LinearMovement leftwards = LinearMovement.withDirection(new PVector(C * t, 0f), new PVector(-C, 0f), t);
+            LinearMovement upwards = LinearMovement.withDirection(new PVector(0f, 0f), new PVector(0f, C), t);
+            LinearMovement downwards = LinearMovement.withDirection(new PVector(0f, C * t), new PVector(0f, -C), t);
+            LinearMovement atStart = LinearMovement.stationary(new PVector(0f, 0f));
+            Function<LinearMovement, Consumer<Integer>> drawPhoton = (lm) -> (i) -> {
+                fill(255, 255, 0);
+                stroke(255, 255, 0);
+                ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + lm.at(i).x,
+                        MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - lm.at(i).y,
+                        PHOTON_SIZE,
+                        PHOTON_SIZE);
+            };
+
             b
                     .wait(prev)
-                    .then((i) -> {
-                        fill(255, 255, 0);
-                        stroke(255, 255, 0);
-                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + i * C,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
-                                PHOTON_SIZE,
-                                PHOTON_SIZE);
-                    })
-
-                    // light up
-                    .then((i) -> {
-                        fill(255, 255, 0);
-                        stroke(255, 255, 0);
-                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - i * C,
-                                PHOTON_SIZE,
-                                PHOTON_SIZE);
-                    }).duration((int) t)
-
-                    // light left
-                    .then((i) -> {
-                        fill(255, 255, 0);
-                        stroke(255, 255, 0);
-                        ellipse(MARGIN + SHIP_SIZE - WALL_OFFSET - PHOTON_SIZE / 2 - i * C,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
-                                PHOTON_SIZE,
-                                PHOTON_SIZE);
-                    })
-
-                    // light down
-                    .then((i) -> {
-                        fill(255, 255, 0);
-                        stroke(255, 255, 0);
-                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2,
-                                MARGIN + WALL_OFFSET + PHOTON_SIZE / 2 + i * C,
-                                PHOTON_SIZE,
-                                PHOTON_SIZE);
-                    }).duration((int) t)
-
-                    // light back at start
-                    .then(() -> {
-                        fill(255, 255, 0);
-                        stroke(255, 255, 0);
-                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
-                                PHOTON_SIZE,
-                                PHOTON_SIZE);
-                    }).duration(100)
+                    .then(drawPhoton.apply(rightwards))
+                    .then(drawPhoton.apply(upwards))
+                    .duration((int) t)
+                    .then(drawPhoton.apply(leftwards))
+                    .then(drawPhoton.apply(downwards))
+                    .duration((int) t)
+                    .then(drawPhoton.apply(atStart))
+                    .duration(100)
                     .end().when();
         }
     }
@@ -358,57 +361,32 @@ public class SpecialRelativity extends PApplet {
             float bogusForth = yDistance / (C - v);
             float bogusBack = yDistance / (C + v);
 
+            LinearMovement rightwards = LinearMovement.withDirection(new PVector(0f, 0f), new PVector(C, 0f), bogusForth);
+            LinearMovement leftwards = LinearMovement.withDirection(new PVector(C * bogusForth, 0f), new PVector(-C, 0f), bogusBack);
+            LinearMovement upwards = LinearMovement.withTarget(new PVector(0f, 0f), new PVector(xDistance, yDistance), tUpDown);
+            LinearMovement downwards = LinearMovement.withTarget(new PVector(xDistance, yDistance), new PVector(2 * xDistance, 0), tUpDown);
+            Function<LinearMovement, Consumer<Integer>> drawPhoton = (lm) -> (i) -> {
+                fill(255, 255, 0);
+                stroke(255, 255, 0);
+                ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + lm.at(i).x,
+                        MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - lm.at(i).y,
+                        PHOTON_SIZE,
+                        PHOTON_SIZE);
+            };
+
             b
-                    // light to right
-                    .then((i) -> {
-                        fill(255, 255, 0);
-                        stroke(255, 255, 0);
-                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + i * C,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
-                                PHOTON_SIZE,
-                                PHOTON_SIZE);
-                    })
+                    .then(drawPhoton.apply(rightwards))
                     .duration((int) bogusForth)
-                    // light left
-                    .then((i) -> {
-                        fill(255, 255, 0);
-                        stroke(255, 255, 0);
-                        ellipse(MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 + DIFF_MIRROR_TO_PHOTON + v * bogusForth - i * C,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2,
-                                PHOTON_SIZE,
-                                PHOTON_SIZE);
-                    })
+                    .then(drawPhoton.apply(leftwards))
                     .duration((int) bogusBack);
 
             b
-                    // light up
-                    .then((i) -> {
-                        float iLeft = tUpDown - i;
-                        float weightStart = iLeft / tUpDown;
-                        float weightDest = i / tUpDown;
-                        fill(255, 255, 0);
-                        stroke(255, 255, 0);
-                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + weightStart * 0 + weightDest * xDistance,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - weightStart * 0 - weightDest * yDistance,
-                                PHOTON_SIZE,
-                                PHOTON_SIZE);
-                    })
+                    .then(drawPhoton.apply(upwards))
                     .duration((int) tUpDown)
-                    // light down
-                    .then((i) -> {
-                        float iLeft = tUpDown - i;
-                        float weightStart = iLeft / tUpDown;
-                        float weightDest = i / tUpDown;
-                        fill(255, 255, 0);
-                        stroke(255, 255, 0);
-                        ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + xDistance + weightStart * 0 + weightDest * xDistance,
-                                MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - weightStart * yDistance - weightDest * 0,
-                                PHOTON_SIZE,
-                                PHOTON_SIZE);
-                    })
+                    .then(drawPhoton.apply(downwards))
                     .duration((int) tUpDown)
 
-                    .wait((int) t)
+                    .wait((int) t) // TODO show end pos for both photons
                     .end().when();
         }
     }
