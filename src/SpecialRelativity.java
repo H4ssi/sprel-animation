@@ -4,7 +4,6 @@ import processing.core.PVector;
 
 import java.util.ArrayList;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class SpecialRelativity extends PApplet {
     private ArrayList<Scene> scenes = new ArrayList<>();
@@ -274,6 +273,17 @@ public class SpecialRelativity extends PApplet {
         }
     }
 
+    Consumer<Integer> drawPhoton(LinearMovement lm) {
+        return (i) -> {
+            fill(255, 255, 0);
+            stroke(255, 255, 0);
+            ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + lm.at(i).x,
+                    MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - lm.at(i).y,
+                    PHOTON_SIZE,
+                    PHOTON_SIZE);
+        };
+    }
+
     private class Stationary extends Scene {
         public Stationary() {
             Ship ship = new Ship();
@@ -313,24 +323,16 @@ public class SpecialRelativity extends PApplet {
             LinearMovement upwards = LinearMovement.withDirection(new PVector(0f, 0f), new PVector(0f, C), t);
             LinearMovement downwards = LinearMovement.withDirection(new PVector(0f, C * t), new PVector(0f, -C), t);
             LinearMovement atStart = LinearMovement.stationary(new PVector(0f, 0f));
-            Function<LinearMovement, Consumer<Integer>> drawPhoton = (lm) -> (i) -> {
-                fill(255, 255, 0);
-                stroke(255, 255, 0);
-                ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + lm.at(i).x,
-                        MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - lm.at(i).y,
-                        PHOTON_SIZE,
-                        PHOTON_SIZE);
-            };
 
             b
                     .wait(prev)
-                    .then(drawPhoton.apply(rightwards))
-                    .then(drawPhoton.apply(upwards))
+                    .then(drawPhoton(rightwards))
+                    .then(drawPhoton(upwards))
                     .duration((int) t)
-                    .then(drawPhoton.apply(leftwards))
-                    .then(drawPhoton.apply(downwards))
+                    .then(drawPhoton(leftwards))
+                    .then(drawPhoton(downwards))
                     .duration((int) t)
-                    .then(drawPhoton.apply(atStart))
+                    .then(drawPhoton(atStart))
                     .duration(100)
                     .end().when();
         }
@@ -365,25 +367,17 @@ public class SpecialRelativity extends PApplet {
             LinearMovement leftwards = LinearMovement.withDirection(new PVector(C * bogusForth, 0f), new PVector(-C, 0f), bogusBack);
             LinearMovement upwards = LinearMovement.withTarget(new PVector(0f, 0f), new PVector(xDistance, yDistance), tUpDown);
             LinearMovement downwards = LinearMovement.withTarget(new PVector(xDistance, yDistance), new PVector(2 * xDistance, 0), tUpDown);
-            Function<LinearMovement, Consumer<Integer>> drawPhoton = (lm) -> (i) -> {
-                fill(255, 255, 0);
-                stroke(255, 255, 0);
-                ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + lm.at(i).x,
-                        MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - lm.at(i).y,
-                        PHOTON_SIZE,
-                        PHOTON_SIZE);
-            };
 
             b
-                    .then(drawPhoton.apply(rightwards))
+                    .then(drawPhoton(rightwards))
                     .duration((int) bogusForth)
-                    .then(drawPhoton.apply(leftwards))
+                    .then(drawPhoton(leftwards))
                     .duration((int) bogusBack);
 
             b
-                    .then(drawPhoton.apply(upwards))
+                    .then(drawPhoton(upwards))
                     .duration((int) tUpDown)
-                    .then(drawPhoton.apply(downwards))
+                    .then(drawPhoton(downwards))
                     .duration((int) tUpDown)
 
                     .wait((int) t) // TODO show end pos for both photons
