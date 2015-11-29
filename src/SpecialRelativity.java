@@ -3,6 +3,8 @@ import processing.core.PFont;
 import processing.core.PVector;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class SpecialRelativity extends PApplet {
@@ -250,6 +252,9 @@ public class SpecialRelativity extends PApplet {
         private final PVector to;
         private final float duration;
 
+        private final static float TRACE_INTERVAL = 432;
+        private final static float TRACE_DECAY = TRACE_INTERVAL * 3.333f;
+
         private LinearMovement(PVector from, PVector to, float duration) {
             this.from = from;
             this.to = to;
@@ -258,6 +263,18 @@ public class SpecialRelativity extends PApplet {
 
         public PVector at(float time) {
             return PVector.lerp(from, to, Math.min(1f, Math.max(0f, time / duration)));
+        }
+
+        public Map<PVector, Float> traces(float time) {
+            float last = time - time % TRACE_INTERVAL;
+
+            Map<PVector, Float> m = new HashMap<>();
+
+            for (float f = last; f >= 0f && time - f <= TRACE_DECAY; f -= TRACE_INTERVAL) {
+                m.merge(at(f), 1 - (time - f) / TRACE_DECAY, Math::max);
+            }
+
+            return m;
         }
 
         public static LinearMovement withTarget(PVector from, PVector to, float duration) {
@@ -281,6 +298,19 @@ public class SpecialRelativity extends PApplet {
                     MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - lm.at(i).y,
                     PHOTON_SIZE,
                     PHOTON_SIZE);
+        };
+    }
+
+    Consumer<Integer> drawPhotonTraces(LinearMovement lm) {
+        return (i) -> {
+            fill(255, 255, 255, 0f);
+            stroke(255, 255, 0);
+            lm.traces(i).forEach((pos, intensity) -> {
+                ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + pos.x,
+                        MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - pos.y,
+                        PHOTON_SIZE * 0.5f * intensity,
+                        PHOTON_SIZE * 0.5f * intensity);
+            });
         };
     }
 
@@ -327,10 +357,14 @@ public class SpecialRelativity extends PApplet {
             b
                     .wait(prev)
                     .then(drawPhoton(rightwards))
+                    .then(drawPhotonTraces(rightwards))
                     .then(drawPhoton(upwards))
+                    .then(drawPhotonTraces(upwards))
                     .duration((int) t)
                     .then(drawPhoton(leftwards))
+                    .then(drawPhotonTraces(leftwards))
                     .then(drawPhoton(downwards))
+                    .then(drawPhotonTraces(downwards))
                     .duration((int) t)
                     .then(drawPhoton(atStart))
                     .duration(100)
@@ -370,14 +404,18 @@ public class SpecialRelativity extends PApplet {
 
             b
                     .then(drawPhoton(rightwards))
+                    .then(drawPhotonTraces(rightwards))
                     .duration((int) bogusForth)
                     .then(drawPhoton(leftwards))
+                    .then(drawPhotonTraces(leftwards))
                     .duration((int) bogusBack);
 
             b
                     .then(drawPhoton(upwards))
+                    .then(drawPhotonTraces(upwards))
                     .duration((int) tUpDown)
                     .then(drawPhoton(downwards))
+                    .then(drawPhotonTraces(downwards))
                     .duration((int) tUpDown)
 
                     .wait((int) t) // TODO show end pos for both photons
