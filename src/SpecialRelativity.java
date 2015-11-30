@@ -401,6 +401,7 @@ public class SpecialRelativity extends PApplet {
             LinearMovement leftwards = LinearMovement.withDirection(new PVector(C * bogusForth, 0f), new PVector(-C, 0f), bogusBack);
             LinearMovement upwards = LinearMovement.withTarget(new PVector(0f, 0f), new PVector(xDistance, yDistance), tUpDown);
             LinearMovement downwards = LinearMovement.withTarget(new PVector(xDistance, yDistance), new PVector(2 * xDistance, 0), tUpDown);
+            LinearMovement withShip = LinearMovement.withDirection(new PVector(xDistance * 2f, 0f), new PVector(v, 0f), bogusForth * 0.1f);
 
             b
                     .then(drawPhoton(rightwards))
@@ -417,6 +418,8 @@ public class SpecialRelativity extends PApplet {
                     .then(drawPhoton(downwards))
                     .then(drawPhotonTraces(downwards))
                     .duration((int) tUpDown)
+                    .then(drawPhoton(withShip))
+                    .duration((int) (bogusForth * 0.1f))
 
                     .wait((int) t) // TODO show end pos for both photons
                     .end().when();
