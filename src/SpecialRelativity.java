@@ -26,8 +26,8 @@ public class SpecialRelativity extends PApplet {
         smallFont = loadFont("FiraSans-Regular-20.vlw");
         tinyFont = loadFont("FiraSans-Regular-16.vlw");
 
-        //scenes.add(new Opening());
-        //scenes.add(new LightIntro());
+        scenes.add(new Opening());
+        scenes.add(new LightIntro());
         scenes.add(new Stationary());
         scenes.add(new Moving());
     }
@@ -70,19 +70,19 @@ public class SpecialRelativity extends PApplet {
         }
 
         protected class Builder {
-            private final int start;
+            private final float start;
             private final Consumer<Integer> sceneSlice;
 
             private Builder() {
                 this(0);
             }
 
-            private Builder(int start) {
+            private Builder(float start) {
                 this(start, (i) -> {
                 });
             }
 
-            private Builder(int start, Consumer<Integer> sceneSlice) {
+            private Builder(float start, Consumer<Integer> sceneSlice) {
                 this.start = start;
                 this.sceneSlice = sceneSlice;
             }
@@ -102,28 +102,28 @@ public class SpecialRelativity extends PApplet {
                 return then(() -> end = true);
             }
 
-            public Builder wait(int millis) {
+            public Builder delay(float millis) {
                 return new Builder(start + millis, sceneSlice);
             }
 
-            public Builder wait(Builder previous) {
-                return wait(previous.start);
+            public Builder delay(Builder previous) {
+                return delay(previous.start);
             }
 
             public Builder chain(Builder next) {
                 return new Builder(start, next.sceneSlice);
             }
 
-            public Builder duration(int millis) {
-                Scene.this.show(start, millis, sceneSlice);
+            public Builder duration(float millis) {
+                Scene.this.show(Math.round(start), Math.round(millis), sceneSlice);
                 return new Builder(start + millis);
             }
 
-            public Builder when(int delay, int length) {
-                return wait(delay).duration(length);
+            public Builder when(float delay, float length) {
+                return delay(delay).duration(length);
             }
 
-            public Builder when(int delay) {
+            public Builder when(float delay) {
                 return when(delay, 0);
             }
 
@@ -169,7 +169,7 @@ public class SpecialRelativity extends PApplet {
                     .then(() -> text("This is light", xText, height * 0.2f)).when(500)
 
                     .chain(tiny)
-                    .then(() -> text("Hello!", xLight, height * 0.45f)).when(250, 2000).wait(-2000)
+                    .then(() -> text("Hello!", xLight, height * 0.45f)).when(250, 2000).delay(-2000)
 
                     .chain(small)
                     .then(() -> text("Light does not give a single sh*t", xText, height * 0.6f)).when(750)
@@ -355,17 +355,17 @@ public class SpecialRelativity extends PApplet {
             LinearMovement atStart = LinearMovement.stationary(new PVector(0f, 0f));
 
             b
-                    .wait(prev)
+                    .delay(prev)
                     .then(drawPhoton(rightwards))
                     .then(drawPhotonTraces(rightwards))
                     .then(drawPhoton(upwards))
                     .then(drawPhotonTraces(upwards))
-                    .duration((int) t)
+                    .duration(t)
                     .then(drawPhoton(leftwards))
                     .then(drawPhotonTraces(leftwards))
                     .then(drawPhoton(downwards))
                     .then(drawPhotonTraces(downwards))
-                    .duration((int) t)
+                    .duration(t)
                     .then(drawPhoton(atStart))
                     .duration(100)
                     .end().when();
@@ -387,7 +387,7 @@ public class SpecialRelativity extends PApplet {
                             ship.draw();
                             popMatrix();
                         });
-                    }).duration((int) t);
+                    }).duration(t);
 
 
             float yDistance = SHIP_SIZE - WALL_OFFSET * 2 - PHOTON_SIZE - DIFF_MIRROR_TO_PHOTON;
@@ -406,22 +406,22 @@ public class SpecialRelativity extends PApplet {
             b
                     .then(drawPhoton(rightwards))
                     .then(drawPhotonTraces(rightwards))
-                    .duration((int) bogusForth)
+                    .duration(bogusForth)
                     .then(drawPhoton(leftwards))
                     .then(drawPhotonTraces(leftwards))
-                    .duration((int) bogusBack);
+                    .duration(bogusBack);
 
             b
                     .then(drawPhoton(upwards))
                     .then(drawPhotonTraces(upwards))
-                    .duration((int) tUpDown)
+                    .duration(tUpDown)
                     .then(drawPhoton(downwards))
                     .then(drawPhotonTraces(downwards))
-                    .duration((int) tUpDown)
+                    .duration(tUpDown)
                     .then(drawPhoton(withShip))
-                    .duration((int) (bogusForth * 0.1f))
+                    .duration((bogusForth * 0.1f))
 
-                    .wait((int) t) // TODO show end pos for both photons
+                    .delay(t) // TODO show end pos for both photons
                     .end().when();
         }
     }
