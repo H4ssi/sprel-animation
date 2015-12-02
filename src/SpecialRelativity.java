@@ -26,8 +26,8 @@ public class SpecialRelativity extends PApplet {
         smallFont = loadFont("FiraSans-Regular-20.vlw");
         tinyFont = loadFont("FiraSans-Regular-16.vlw");
 
-        scenes.add(new Opening());
-        scenes.add(new LightIntro());
+        //scenes.add(new Opening());
+        //scenes.add(new LightIntro());
         scenes.add(new Stationary());
         scenes.add(new Moving());
     }
@@ -247,13 +247,44 @@ public class SpecialRelativity extends PApplet {
         }
     }
 
-    private static class LinearMovement {
+    private interface Movement {
+        PVector at(float time);
+
+        Float getDuration();
+
+        static Movement chain(Movement... movements) {
+            return new Movement() {
+                @Override
+                public PVector at(float time) {
+                    for (Movement m : movements) {
+                        if (m.getDuration() == null || time <= m.getDuration()) {
+                            return m.at(time);
+                        }
+                        time -= m.getDuration();
+                    }
+                    return null;
+                }
+
+                @Override
+                public Float getDuration() {
+                    float d = 0;
+                    for (Movement m : movements) {
+                        if (m.getDuration() == null) {
+                            return null;
+                        }
+                        d += m.getDuration();
+                    }
+                    return d;
+                }
+            };
+        }
+    }
+
+    private static class LinearMovement implements Movement {
         private final PVector from;
         private final PVector to;
         private final float duration;
 
-        private final static float TRACE_INTERVAL = 432;
-        private final static float TRACE_DECAY = TRACE_INTERVAL * 3.333f;
 
         private LinearMovement(PVector from, PVector to, float duration) {
             this.from = from;
@@ -261,20 +292,14 @@ public class SpecialRelativity extends PApplet {
             this.duration = duration;
         }
 
+        @Override
         public PVector at(float time) {
             return PVector.lerp(from, to, Math.min(1f, Math.max(0f, time / duration)));
         }
 
-        public Map<PVector, Float> traces(float time) {
-            float last = time - time % TRACE_INTERVAL;
-
-            Map<PVector, Float> m = new HashMap<>();
-
-            for (float f = last; f >= 0f && time - f <= TRACE_DECAY; f -= TRACE_INTERVAL) {
-                m.merge(at(f), 1 - (time - f) / TRACE_DECAY, Math::max);
-            }
-
-            return m;
+        @Override
+        public Float getDuration() {
+            return duration;
         }
 
         public static LinearMovement withTarget(PVector from, PVector to, float duration) {
@@ -290,22 +315,51 @@ public class SpecialRelativity extends PApplet {
         }
     }
 
-    Consumer<Integer> drawPhoton(LinearMovement lm) {
+    public class Tracer {
+        private final Movement movement;
+
+        private final static float TRACE_INTERVAL = 432;
+        private final static float TRACE_DECAY = TRACE_INTERVAL * 3.333f;
+
+        public Tracer(Movement movement) {
+            this.movement = movement;
+        }
+
+        public Map<PVector, Float> traces(float time) {
+            float last = time - time % TRACE_INTERVAL;
+
+            Map<PVector, Float> m = new HashMap<>();
+
+            for (float f = last; f >= 0f && time - f <= TRACE_DECAY; f -= TRACE_INTERVAL) {
+                PVector pos = movement.at(f);
+                if (pos != null) {
+                    m.merge(pos, 1 - (time - f) / TRACE_DECAY, Math::max);
+                }
+            }
+
+            return m;
+        }
+    }
+
+    Consumer<Integer> drawPhoton(Movement movement) {
         return (i) -> {
             fill(255, 255, 0);
             stroke(255, 255, 0);
-            ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + lm.at(i).x,
-                    MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - lm.at(i).y,
+            ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + movement.at(i).x,
+                    MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - movement.at(i).y,
                     PHOTON_SIZE,
                     PHOTON_SIZE);
         };
     }
 
-    Consumer<Integer> drawPhotonTraces(LinearMovement lm) {
+    Consumer<Integer> drawPhotonTraces(Movement movement) {
         return (i) -> {
             fill(255, 255, 255, 0f);
             stroke(255, 255, 0);
-            lm.traces(i).forEach((pos, intensity) -> {
+
+            Tracer tracer = new Tracer(movement);
+
+            tracer.traces(i).forEach((pos, intensity) -> {
                 ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + pos.x,
                         MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - pos.y,
                         PHOTON_SIZE * 0.5f * intensity,
@@ -348,24 +402,21 @@ public class SpecialRelativity extends PApplet {
 
             float t = (SHIP_SIZE - 2 * WALL_OFFSET - PHOTON_SIZE - DIFF_MIRROR_TO_PHOTON) / C;
 
-            LinearMovement rightwards = LinearMovement.withDirection(new PVector(0f, 0f), new PVector(C, 0f), t);
-            LinearMovement leftwards = LinearMovement.withDirection(new PVector(C * t, 0f), new PVector(-C, 0f), t);
-            LinearMovement upwards = LinearMovement.withDirection(new PVector(0f, 0f), new PVector(0f, C), t);
-            LinearMovement downwards = LinearMovement.withDirection(new PVector(0f, C * t), new PVector(0f, -C), t);
+            Movement rightLeft = Movement.chain(
+                    LinearMovement.withDirection(new PVector(0f, 0f), new PVector(C, 0f), t),
+                    LinearMovement.withDirection(new PVector(C * t, 0f), new PVector(-C, 0f), t));
+            Movement upDown = Movement.chain(
+                    LinearMovement.withDirection(new PVector(0f, 0f), new PVector(0f, C), t),
+                    LinearMovement.withDirection(new PVector(0f, C * t), new PVector(0f, -C), t));
             LinearMovement atStart = LinearMovement.stationary(new PVector(0f, 0f));
 
             b
                     .delay(prev)
-                    .then(drawPhoton(rightwards))
-                    .then(drawPhotonTraces(rightwards))
-                    .then(drawPhoton(upwards))
-                    .then(drawPhotonTraces(upwards))
-                    .duration(t)
-                    .then(drawPhoton(leftwards))
-                    .then(drawPhotonTraces(leftwards))
-                    .then(drawPhoton(downwards))
-                    .then(drawPhotonTraces(downwards))
-                    .duration(t)
+                    .then(drawPhoton(rightLeft))
+                    .then(drawPhotonTraces(rightLeft))
+                    .then(drawPhoton(upDown))
+                    .then(drawPhotonTraces(upDown))
+                    .duration(2 * t)
                     .then(drawPhoton(atStart))
                     .duration(100)
                     .end().when();
@@ -397,27 +448,23 @@ public class SpecialRelativity extends PApplet {
             float bogusForth = yDistance / (C - v);
             float bogusBack = yDistance / (C + v);
 
-            LinearMovement rightwards = LinearMovement.withDirection(new PVector(0f, 0f), new PVector(C, 0f), bogusForth);
-            LinearMovement leftwards = LinearMovement.withDirection(new PVector(C * bogusForth, 0f), new PVector(-C, 0f), bogusBack);
-            LinearMovement upwards = LinearMovement.withTarget(new PVector(0f, 0f), new PVector(xDistance, yDistance), tUpDown);
-            LinearMovement downwards = LinearMovement.withTarget(new PVector(xDistance, yDistance), new PVector(2 * xDistance, 0), tUpDown);
+            Movement rightLeft = Movement.chain(
+                    LinearMovement.withDirection(new PVector(0f, 0f), new PVector(C, 0f), bogusForth),
+                    LinearMovement.withDirection(new PVector(C * bogusForth, 0f), new PVector(-C, 0f), bogusBack));
+            Movement upDown = Movement.chain(
+                    LinearMovement.withTarget(new PVector(0f, 0f), new PVector(xDistance, yDistance), tUpDown),
+                    LinearMovement.withTarget(new PVector(xDistance, yDistance), new PVector(2 * xDistance, 0), tUpDown));
             LinearMovement withShip = LinearMovement.withDirection(new PVector(xDistance * 2f, 0f), new PVector(v, 0f), bogusForth * 0.1f);
 
             b
-                    .then(drawPhoton(rightwards))
-                    .then(drawPhotonTraces(rightwards))
-                    .duration(bogusForth)
-                    .then(drawPhoton(leftwards))
-                    .then(drawPhotonTraces(leftwards))
-                    .duration(bogusBack);
+                    .then(drawPhoton(rightLeft))
+                    .then(drawPhotonTraces(rightLeft))
+                    .duration(bogusForth + bogusBack);
 
             b
-                    .then(drawPhoton(upwards))
-                    .then(drawPhotonTraces(upwards))
-                    .duration(tUpDown)
-                    .then(drawPhoton(downwards))
-                    .then(drawPhotonTraces(downwards))
-                    .duration(tUpDown)
+                    .then(drawPhoton(upDown))
+                    .then(drawPhotonTraces(upDown))
+                    .duration(tUpDown + tUpDown)
                     .then(drawPhoton(withShip))
                     .duration((bogusForth * 0.1f))
 
