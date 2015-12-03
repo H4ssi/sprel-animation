@@ -28,7 +28,7 @@ public class SpecialRelativity extends PApplet {
 
         //scenes.add(new Opening());
         //scenes.add(new LightIntro());
-        scenes.add(new Stationary());
+        //scenes.add(new Stationary());
         scenes.add(new Moving());
     }
 
@@ -57,9 +57,9 @@ public class SpecialRelativity extends PApplet {
             runs.forEach(Runnable::run);
         }
 
-        private void show(int offset, int duration, Consumer<Integer> run) {
+        private void show(int offset, Integer duration, Consumer<Integer> run) {
             runs.add(() -> {
-                if (start + offset <= millis() && (duration == 0 || millis() <= start + offset + duration)) {
+                if (start + offset <= millis() && (duration == null || millis() <= start + offset + duration)) {
                     run.accept(millis() - start - offset);
                 }
             });
@@ -71,6 +71,7 @@ public class SpecialRelativity extends PApplet {
 
         protected class Builder {
             private final float start;
+            private final Float duration;
             private final Consumer<Integer> sceneSlice;
 
             private Builder() {
@@ -83,23 +84,28 @@ public class SpecialRelativity extends PApplet {
             }
 
             private Builder(float start, Consumer<Integer> sceneSlice) {
+                this(start, null, sceneSlice);
+            }
+
+            private Builder(float start, Float duration, Consumer<Integer> sceneSlice) {
                 this.start = start;
+                this.duration = duration;
                 this.sceneSlice = sceneSlice;
             }
 
-            public Builder then(Consumer<Integer> sceneSlice) {
+            public Builder show(Consumer<Integer> sceneSlice) {
                 return new Builder(start, (i) -> {
                     Builder.this.sceneSlice.accept(i);
                     sceneSlice.accept(i);
                 });
             }
 
-            public Builder then(Runnable sceneSlice) {
-                return then((i) -> sceneSlice.run());
+            public Builder show(Runnable sceneSlice) {
+                return show((i) -> sceneSlice.run());
             }
 
             public Builder end() {
-                return then(() -> end = true);
+                return show(() -> end = true);
             }
 
             public Builder delay(float millis) {
@@ -114,21 +120,33 @@ public class SpecialRelativity extends PApplet {
                 return new Builder(start, next.sceneSlice);
             }
 
-            public Builder duration(float millis) {
-                Scene.this.show(Math.round(start), Math.round(millis), sceneSlice);
-                return new Builder(start + millis);
+            public Builder duration(Float millis) {
+                return new Builder(start, millis, sceneSlice);
             }
 
-            public Builder when(float delay, float length) {
-                return delay(delay).duration(length);
+            public Builder then() {
+                if (duration == null) {
+                    throw new IllegalArgumentException("cannot show another slice after an non-ending slice");
+                }
+                Scene.this.show(Math.round(start), Math.round(duration), sceneSlice);
+                return new Builder(start + duration);
+            }
+
+            public Builder parallel() {
+                Scene.this.show(Math.round(start), duration == null ? null : Math.round(duration), sceneSlice);
+                return new Builder(start);
+            }
+
+            public Builder when(float delay, Float length) {
+                return delay(delay).duration(length).parallel();
             }
 
             public Builder when(float delay) {
-                return when(delay, 0);
+                return when(delay, duration);
             }
 
             public Builder when() {
-                return duration(0);
+                return when(0);
             }
         }
 
@@ -138,13 +156,13 @@ public class SpecialRelativity extends PApplet {
     private class Opening extends Scene {
         public Opening() {
             b
-                    .then(() -> {
+                    .show(() -> {
                         background(0);
                         textFont(bigFont);
                         textAlign(CENTER);
                     })
-                    .then(() -> text("Special Relativity", width / 2f, height / 2f)).when()
-                    .then(() -> text("is hard", width / 2f, height / 1.5f)).when(1000)
+                    .show(() -> text("Special Relativity", width / 2f, height / 2f)).when()
+                    .show(() -> text("is hard", width / 2f, height / 1.5f)).when(1000)
                     .end().when(1000);
         }
     }
@@ -154,11 +172,11 @@ public class SpecialRelativity extends PApplet {
             int xLight = 100;
             int xText = width / 2;
 
-            Builder small = b.then(() -> textFont(smallFont));
-            Builder tiny = b.then(() -> textFont(tinyFont));
+            Builder small = b.show(() -> textFont(smallFont));
+            Builder tiny = b.show(() -> textFont(tinyFont));
 
             b
-                    .then(() -> {
+                    .show(() -> {
                         background(0);
                         fill(255, 255, 0);
                         ellipse(xLight, height * 0.5f, 20, 20);
@@ -166,19 +184,19 @@ public class SpecialRelativity extends PApplet {
                     .when()
 
                     .chain(small)
-                    .then(() -> text("This is light", xText, height * 0.2f)).when(500)
+                    .show(() -> text("This is light", xText, height * 0.2f)).when(500)
 
                     .chain(tiny)
-                    .then(() -> text("Hello!", xLight, height * 0.45f)).when(250, 2000).delay(-2000)
+                    .show(() -> text("Hello!", xLight, height * 0.45f)).when(250, 2000f)
 
                     .chain(small)
-                    .then(() -> text("Light does not give a single sh*t", xText, height * 0.6f)).when(750)
-                    .then(() -> text("about nothing whatsoever", xText, height * 0.66f)).when(750)
-                    .then(() -> text("its speed is always the same", xText, height * 0.8f)).when(750)
-                    .then(() -> text("ALWAYS!!!111one", xText, height * 0.86f)).when(750)
+                    .show(() -> text("Light does not give a single sh*t", xText, height * 0.6f)).when(500)
+                    .show(() -> text("about nothing whatsoever", xText, height * 0.66f)).when(750)
+                    .show(() -> text("its speed is always the same", xText, height * 0.8f)).when(750)
+                    .show(() -> text("ALWAYS!!!111one", xText, height * 0.86f)).when(750)
 
                     .chain(tiny)
-                    .then(() -> text("Gotta go fast!", xLight, height * 0.45f)).when(250, 500)
+                    .show(() -> text("Gotta go fast!", xLight, height * 0.45f)).when(250, 500f)
                     .end().when();
         }
     }
@@ -318,8 +336,8 @@ public class SpecialRelativity extends PApplet {
     public class Tracer {
         private final Movement movement;
 
-        private final static float TRACE_INTERVAL = 432;
-        private final static float TRACE_DECAY = TRACE_INTERVAL * 3.333f;
+        public final static float TRACE_INTERVAL = 432;
+        public final static float TRACE_DECAY = TRACE_INTERVAL * 3.333f;
 
         public Tracer(Movement movement) {
             this.movement = movement;
@@ -372,30 +390,30 @@ public class SpecialRelativity extends PApplet {
         public Stationary() {
             Ship ship = new Ship();
             Builder prev = b
-                    .then(() -> background(0))
-                    .when(0)
-                    .then(() -> {
+                    .show(() -> background(0))
+                    .when()
+                    .show(() -> {
                         withMargin(ship::drawBorder);
                     })
-                    .then(() -> {
+                    .show(() -> {
                         fill(0, 255, 0);
                         text("This is a spaceship", width / 2, 2 * MARGIN + SHIP_SIZE + 30);
                     }).when(250)
-                    .then(() -> {
+                    .show(() -> {
                         withMargin(ship::drawMirrors);
                     }).when(250)
-                    .then(() -> {
+                    .show(() -> {
                         fill(100, 100, 100);
                         text("These are mirrors", width / 2, 2 * MARGIN + SHIP_SIZE + 60);
                     }).when(250)
-                    .then(() -> {
+                    .show(() -> {
                         withMargin(ship::drawLightSources);
                     }).when(250)
-                    .then(() -> {
+                    .show(() -> {
                         fill(255, 0, 0);
                         text("These are light sources", width / 2, 2 * MARGIN + SHIP_SIZE + 90);
                     }).when(250)
-                    .then(() -> {
+                    .show(() -> {
                         fill(255, 255, 0);
                         text("No let us fire a photon each", width / 2, 2 * MARGIN + SHIP_SIZE + 120);
                     }).when(250);
@@ -412,14 +430,13 @@ public class SpecialRelativity extends PApplet {
 
             b
                     .delay(prev)
-                    .then(drawPhoton(rightLeft))
-                    .then(drawPhotonTraces(rightLeft))
-                    .then(drawPhoton(upDown))
-                    .then(drawPhotonTraces(upDown))
-                    .duration(2 * t)
-                    .then(drawPhoton(atStart))
-                    .duration(100)
-                    .end().when();
+                    .show(drawPhoton(rightLeft)).duration(2 * t)
+                    .parallel().show(drawPhotonTraces(rightLeft)).duration(2 * t + Tracer.TRACE_DECAY)
+                    .parallel().show(drawPhoton(upDown)).duration(2 * t)
+                    .parallel().show(drawPhotonTraces(upDown)).duration(2 * t + Tracer.TRACE_DECAY)
+
+                    .then().show(drawPhoton(atStart))
+                    .when(100).end().when();
         }
     }
 
@@ -430,15 +447,15 @@ public class SpecialRelativity extends PApplet {
             float v = C * 0.8f;
             float t = 3 * SHIP_SIZE / v;
             b
-                    .then(() -> background(0))
-                    .then((i) -> {
+                    .show(() -> background(0)).when()
+                    .show((i) -> {
                         withMargin(() -> {
                             pushMatrix();
                             translate(i * v, 0);
                             ship.draw();
                             popMatrix();
                         });
-                    }).duration(t);
+                    }).duration(t).then();
 
 
             float yDistance = SHIP_SIZE - WALL_OFFSET * 2 - PHOTON_SIZE - DIFF_MIRROR_TO_PHOTON;
@@ -457,19 +474,13 @@ public class SpecialRelativity extends PApplet {
             LinearMovement withShip = LinearMovement.withDirection(new PVector(xDistance * 2f, 0f), new PVector(v, 0f), bogusForth * 0.1f);
 
             b
-                    .then(drawPhoton(rightLeft))
-                    .then(drawPhotonTraces(rightLeft))
-                    .duration(bogusForth + bogusBack);
-
-            b
-                    .then(drawPhoton(upDown))
-                    .then(drawPhotonTraces(upDown))
-                    .duration(tUpDown + tUpDown)
-                    .then(drawPhoton(withShip))
-                    .duration((bogusForth * 0.1f))
-
-                    .delay(t) // TODO show end pos for both photons
-                    .end().when();
+                    .show(drawPhoton(rightLeft)).duration(bogusForth + bogusBack)
+                    .parallel().show(drawPhotonTraces(rightLeft)).duration(bogusForth + bogusBack + Tracer.TRACE_DECAY)
+                    .parallel().show(drawPhoton(upDown)).duration(tUpDown + tUpDown)
+                    .parallel().show(drawPhotonTraces(upDown)).duration(tUpDown + tUpDown + Tracer.TRACE_DECAY)
+                    .then().delay(-Tracer.TRACE_DECAY).show(drawPhoton(withShip)).duration((bogusForth * 0.1f))
+                    // TODO show end pos for both photons
+                    .then().when(t).end().when();
         }
     }
 }
