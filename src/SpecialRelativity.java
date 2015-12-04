@@ -28,7 +28,7 @@ public class SpecialRelativity extends PApplet {
 
         //scenes.add(new Opening());
         //scenes.add(new LightIntro());
-        //scenes.add(new Stationary());
+        scenes.add(new Stationary());
         scenes.add(new Moving());
     }
 
@@ -426,7 +426,6 @@ public class SpecialRelativity extends PApplet {
             Movement upDown = Movement.chain(
                     LinearMovement.withDirection(new PVector(0f, 0f), new PVector(0f, C), t),
                     LinearMovement.withDirection(new PVector(0f, C * t), new PVector(0f, -C), t));
-            LinearMovement atStart = LinearMovement.stationary(new PVector(0f, 0f));
 
             b
                     .delay(prev)
@@ -435,8 +434,7 @@ public class SpecialRelativity extends PApplet {
                     .parallel().show(drawPhoton(upDown)).duration(2 * t)
                     .parallel().show(drawPhotonTraces(upDown)).duration(2 * t + Tracer.TRACE_DECAY)
 
-                    .then().show(drawPhoton(atStart))
-                    .when(100).end().when();
+                    .then().when(100).end().when();
         }
     }
 
@@ -471,15 +469,12 @@ public class SpecialRelativity extends PApplet {
             Movement upDown = Movement.chain(
                     LinearMovement.withTarget(new PVector(0f, 0f), new PVector(xDistance, yDistance), tUpDown),
                     LinearMovement.withTarget(new PVector(xDistance, yDistance), new PVector(2 * xDistance, 0), tUpDown));
-            LinearMovement withShip = LinearMovement.withDirection(new PVector(xDistance * 2f, 0f), new PVector(v, 0f), bogusForth * 0.1f);
 
             b
                     .show(drawPhoton(rightLeft)).duration(bogusForth + bogusBack)
                     .parallel().show(drawPhotonTraces(rightLeft)).duration(bogusForth + bogusBack + Tracer.TRACE_DECAY)
                     .parallel().show(drawPhoton(upDown)).duration(tUpDown + tUpDown)
                     .parallel().show(drawPhotonTraces(upDown)).duration(tUpDown + tUpDown + Tracer.TRACE_DECAY)
-                    .then().delay(-Tracer.TRACE_DECAY).show(drawPhoton(withShip)).duration((bogusForth * 0.1f))
-                    // TODO show end pos for both photons
                     .then().when(t).end().when();
         }
     }
