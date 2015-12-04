@@ -363,8 +363,12 @@ public class SpecialRelativity extends PApplet {
         return (i) -> {
             fill(255, 255, 0);
             stroke(255, 255, 0);
-            ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + movement.at(i).x,
-                    MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - movement.at(i).y,
+            PVector position = movement.at(i);
+            if (position == null) {
+                return;
+            }
+            ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + position.x,
+                    MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - position.y,
                     PHOTON_SIZE,
                     PHOTON_SIZE);
         };
