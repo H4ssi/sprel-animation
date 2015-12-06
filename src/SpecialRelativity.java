@@ -359,19 +359,25 @@ public class SpecialRelativity extends PApplet {
         }
     }
 
-    Consumer<Integer> drawPhoton(Movement movement) {
+    Consumer<Integer> drawMovement(Movement movement, Consumer<PVector> drawer) {
         return (i) -> {
-            fill(255, 255, 0);
-            stroke(255, 255, 0);
             PVector position = movement.at(i);
             if (position == null) {
                 return;
             }
+            drawer.accept(position);
+        };
+    }
+
+    Consumer<Integer> drawPhoton(Movement movement) {
+        return drawMovement(movement, (position) -> {
+            fill(255, 255, 0);
+            stroke(255, 255, 0);
             ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + position.x,
                     MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - position.y,
                     PHOTON_SIZE,
                     PHOTON_SIZE);
-        };
+        });
     }
 
     Consumer<Integer> drawPhotonTraces(Movement movement) {
@@ -448,16 +454,18 @@ public class SpecialRelativity extends PApplet {
 
             float v = C * 0.8f;
             float t = 3 * SHIP_SIZE / v;
+
+            Movement shipMovement = LinearMovement.withDirection(new PVector(0, 0), new PVector(v, 0), t + Tracer.TRACE_DECAY);
+
             b
                     .show(() -> background(0)).when()
-                    .show((i) -> {
-                        withMargin(() -> {
-                            pushMatrix();
-                            translate(i * v, 0);
-                            ship.draw();
-                            popMatrix();
-                        });
-                    }).duration(t).then();
+                    .show(drawMovement(shipMovement, (position) -> withMargin(() -> {
+                        pushMatrix();
+                        translate(position.x, position.y);
+                        ship.draw();
+                        popMatrix();
+                    })))
+                    .duration(t + Tracer.TRACE_DECAY).then();
 
 
             float yDistance = SHIP_SIZE - WALL_OFFSET * 2 - PHOTON_SIZE - DIFF_MIRROR_TO_PHOTON;
