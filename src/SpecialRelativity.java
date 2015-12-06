@@ -4,6 +4,7 @@ import processing.core.PVector;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -374,25 +375,35 @@ public class SpecialRelativity extends PApplet {
             fill(255, 255, 0);
             stroke(255, 255, 0);
             ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + position.x,
-                    MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - position.y,
+                    MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 + position.y,
                     PHOTON_SIZE,
                     PHOTON_SIZE);
         });
     }
 
+    Consumer<Integer> drawTraces(Movement movement, BiConsumer<PVector, Float> drawer) {
+        return (i) -> new Tracer(movement).traces(i).forEach((entry) -> drawer.accept(entry.getKey(), entry.getValue()));
+    }
+
+    Consumer<Integer> drawCircleTraces(Movement movement, float r, float g, float b) {
+        return drawTraces(movement, (position, intensity) -> {
+            fill(r, g, b, 0f);
+            stroke(r, g, b);
+
+            ellipse(position.x,
+                    position.y,
+                    PHOTON_SIZE * 0.5f * intensity,
+                    PHOTON_SIZE * 0.5f * intensity);
+        });
+    }
+
     Consumer<Integer> drawPhotonTraces(Movement movement) {
         return (i) -> {
-            fill(255, 255, 255, 0f);
-            stroke(255, 255, 0);
-
-            Tracer tracer = new Tracer(movement);
-
-            tracer.traces(i).forEach((entry) -> {
-                ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + entry.getKey().x,
-                        MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - entry.getKey().y,
-                        PHOTON_SIZE * 0.5f * entry.getValue(),
-                        PHOTON_SIZE * 0.5f * entry.getValue());
-            });
+            pushMatrix();
+            translate(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2,
+                    MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2);
+            drawCircleTraces(movement, 255, 255, 0).accept(i);
+            popMatrix();
         };
     }
 
@@ -434,8 +445,8 @@ public class SpecialRelativity extends PApplet {
                     LinearMovement.withDirection(new PVector(0f, 0f), new PVector(C, 0f), t),
                     LinearMovement.withDirection(new PVector(C * t, 0f), new PVector(-C, 0f), t));
             Movement upDown = Movement.chain(
-                    LinearMovement.withDirection(new PVector(0f, 0f), new PVector(0f, C), t),
-                    LinearMovement.withDirection(new PVector(0f, C * t), new PVector(0f, -C), t));
+                    LinearMovement.withDirection(new PVector(0f, 0f), new PVector(0f, -C), t),
+                    LinearMovement.withDirection(new PVector(0f, -C * t), new PVector(0f, C), t));
 
             b
                     .delay(prev)
@@ -464,8 +475,14 @@ public class SpecialRelativity extends PApplet {
                         translate(position.x, position.y);
                         ship.draw();
                         popMatrix();
-                    })))
-                    .duration(t + Tracer.TRACE_DECAY).then();
+                    }))).duration(t + Tracer.TRACE_DECAY)
+                    .parallel()
+                    .show((i) -> withMargin(() -> {
+                        pushMatrix();
+                        translate(-PHOTON_SIZE / 4, SHIP_SIZE / 2);
+                        drawCircleTraces(shipMovement, 0, 255, 0).accept(i);
+                        popMatrix();
+                    })).duration(t + Tracer.TRACE_DECAY).then();
 
 
             float yDistance = SHIP_SIZE - WALL_OFFSET * 2 - PHOTON_SIZE - DIFF_MIRROR_TO_PHOTON;
@@ -479,8 +496,8 @@ public class SpecialRelativity extends PApplet {
                     LinearMovement.withDirection(new PVector(0f, 0f), new PVector(C, 0f), bogusForth),
                     LinearMovement.withDirection(new PVector(C * bogusForth, 0f), new PVector(-C, 0f), bogusBack));
             Movement upDown = Movement.chain(
-                    LinearMovement.withTarget(new PVector(0f, 0f), new PVector(xDistance, yDistance), tUpDown),
-                    LinearMovement.withTarget(new PVector(xDistance, yDistance), new PVector(2 * xDistance, 0), tUpDown));
+                    LinearMovement.withTarget(new PVector(0f, 0f), new PVector(xDistance, -yDistance), tUpDown),
+                    LinearMovement.withTarget(new PVector(xDistance, -yDistance), new PVector(2 * xDistance, 0), tUpDown));
 
             b
                     .show(drawPhoton(rightLeft)).duration(bogusForth + bogusBack)
