@@ -2,10 +2,10 @@ import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PVector;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 public class SpecialRelativity extends PApplet {
     private ArrayList<Scene> scenes = new ArrayList<>();
@@ -333,7 +333,7 @@ public class SpecialRelativity extends PApplet {
         }
     }
 
-    public class Tracer {
+    public static class Tracer {
         private final Movement movement;
 
         public final static float TRACE_INTERVAL = 432;
@@ -343,19 +343,19 @@ public class SpecialRelativity extends PApplet {
             this.movement = movement;
         }
 
-        public Map<PVector, Float> traces(float time) {
+        public Stream<AbstractMap.SimpleImmutableEntry<PVector, Float>> traces(float time) {
             float last = time - time % TRACE_INTERVAL;
 
-            Map<PVector, Float> m = new HashMap<>();
+            Stream.Builder<AbstractMap.SimpleImmutableEntry<PVector, Float>> builder = Stream.builder();
 
             for (float f = last; f >= 0f && time - f <= TRACE_DECAY; f -= TRACE_INTERVAL) {
                 PVector pos = movement.at(f);
                 if (pos != null) {
-                    m.merge(pos, 1 - (time - f) / TRACE_DECAY, Math::max);
+                    builder.accept(new AbstractMap.SimpleImmutableEntry<>(pos, 1 - (time - f) / TRACE_DECAY));
                 }
             }
 
-            return m;
+            return builder.build();
         }
     }
 
@@ -381,11 +381,11 @@ public class SpecialRelativity extends PApplet {
 
             Tracer tracer = new Tracer(movement);
 
-            tracer.traces(i).forEach((pos, intensity) -> {
-                ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + pos.x,
-                        MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - pos.y,
-                        PHOTON_SIZE * 0.5f * intensity,
-                        PHOTON_SIZE * 0.5f * intensity);
+            tracer.traces(i).forEach((entry) -> {
+                ellipse(MARGIN + WALL_OFFSET + MIRROR_WIDTH / 2 + entry.getKey().x,
+                        MARGIN + SHIP_SIZE - WALL_OFFSET - MIRROR_WIDTH / 2 - entry.getKey().y,
+                        PHOTON_SIZE * 0.5f * entry.getValue(),
+                        PHOTON_SIZE * 0.5f * entry.getValue());
             });
         };
     }
